@@ -1,0 +1,235 @@
+
+{% extends 'users/user_base.html' %}
+
+{% block title %}Home — OralScan AI{% endblock %}
+{% block breadcrumb %}Home{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── WELCOME HERO ──────────────────────────────── */
+  .welcome-hero {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.8) 55%, rgba(30, 64, 175, 0.4) 100%);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 2.25rem;
+    color: white;
+    position: relative; overflow: hidden;
+    margin-bottom: 1.75rem;
+  }
+  .welcome-hero::before {
+    content:''; position:absolute; inset:0;
+    background-image: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size: 24px 24px; pointer-events:none;
+  }
+  .wh-blob { position:absolute; border-radius:50%; pointer-events:none; filter:blur(65px); }
+  .wh-b1 { width:320px; height:320px; background:rgba(26,86,219,.28); top:-100px; right:-60px; }
+  .wh-b2 { width:200px; height:200px; background:rgba(52,211,153,.12); bottom:-60px; left:0; }
+
+  .wh-greeting {
+    display:inline-flex; align-items:center; gap:.4rem;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+    color:rgba(255,255,255,.8); font-size:.68rem; font-weight:700;
+    letter-spacing:.09em; text-transform:uppercase;
+    padding:.26rem .85rem; border-radius:999px; margin-bottom:.9rem; position:relative;
+  }
+  .wh-dot { width:6px; height:6px; border-radius:50%; background:#4ade80; box-shadow:0 0 6px #4ade80; animation:blink 2s ease-in-out infinite; }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .wh-title {
+    font-family:var(--font-h); font-size:clamp(1.4rem,3vw,2.1rem);
+    font-weight:700; color:white; line-height:1.15;
+    letter-spacing:-.025em; margin-bottom:.5rem; position:relative;
+  }
+  .wh-title em { font-style:normal; color:#93c5fd; }
+  .wh-sub { font-size:.9rem; color:rgba(255,255,255,.6); line-height:1.75; max-width:500px; position:relative; margin-bottom:1.6rem; }
+
+  .wh-actions { display:flex; gap:.7rem; flex-wrap:wrap; position:relative; }
+  .btn-wh-primary {
+    background:white; color:var(--ink); font-weight:800; font-size:.875rem;
+    border:none; border-radius:var(--radius-sm); padding:.62rem 1.4rem;
+    display:inline-flex; align-items:center; gap:.4rem; text-decoration:none;
+    transition:background .2s, transform .15s, box-shadow .2s;
+  }
+  .btn-wh-primary:hover { background:#e0eaff; color:var(--blue); transform:translateY(-2px); box-shadow:0 5px 16px rgba(0,0,0,.2); }
+  .btn-wh-ghost {
+    background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.22);
+    color:rgba(255,255,255,.85); font-weight:700; font-size:.875rem;
+    border-radius:var(--radius-sm); padding:.6rem 1.3rem;
+    display:inline-flex; align-items:center; gap:.4rem; text-decoration:none;
+    transition:all .2s;
+  }
+  .btn-wh-ghost:hover { background:rgba(255,255,255,.15); color:white; transform:translateY(-2px); }
+
+  /* ── TOOL CARDS ────────────────────────────────── */
+  .tool-card {
+    background: var(--white);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    height: 100%;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+    transition: box-shadow .25s, transform .25s, border-color .2s;
+    text-decoration: none; color: var(--text);
+  }
+  .tool-card::after {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    transform:scaleX(0); transform-origin:left; transition:transform .3s ease;
+  }
+  .tool-card.blue::after  { background:linear-gradient(90deg, var(--blue), #60a5fa); }
+  .tool-card.green::after { background:linear-gradient(90deg, var(--green), #34d399); }
+  .tool-card.amber::after { background:linear-gradient(90deg, var(--amber), #fbbf24); }
+  .tool-card:hover { box-shadow:var(--sh-md); transform:translateY(-4px); color:var(--text); }
+  .tool-card:hover::after { transform:scaleX(1); }
+
+  .tool-icon {
+    width:52px; height:52px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.3rem; margin-bottom:1.1rem; flex-shrink:0;
+  }
+  .tool-title { font-weight:800; font-size:1.05rem; color:var(--ink); margin-bottom:.45rem; }
+  .tool-desc  { font-size:.875rem; color:#334e68; line-height:1.7; flex:1; }
+  .tool-cta {
+    display:inline-flex; align-items:center; gap:.35rem;
+    font-weight:700; font-size:.82rem; margin-top:1.25rem;
+    text-decoration:none; transition:gap .2s;
+  }
+  .tool-card.blue  .tool-cta { color:var(--blue); }
+  .tool-card.green .tool-cta { color:var(--green); }
+  .tool-card.amber .tool-cta { color:var(--amber); }
+  .tool-card:hover .tool-cta { gap:.6rem; }
+
+  /* ── INFO BANNER ───────────────────────────────── */
+  .info-banner {
+    background: var(--blue-pale); 
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--blue-border);
+    border-radius: var(--radius); padding: 1.2rem 1.5rem;
+    display: flex; align-items: flex-start; gap: .75rem; margin-top: 1.75rem;
+  }
+  .info-banner i { color: var(--blue); font-size: 1.1rem; flex-shrink: 0; margin-top: .1rem; }
+  .info-banner-title { font-weight: 700; color: var(--blue); font-size: .9rem; margin-bottom: .2rem; }
+  .info-banner-text  { font-size: .83rem; color: var(--muted); line-height: 1.65; margin: 0; }
+
+  /* ── STAT CARDS ANIM ───────────────────────────── */
+  .stat-card { animation:fadeUp .4s ease both; }
+  .stat-card:nth-child(1){animation-delay:.05s}
+  .stat-card:nth-child(2){animation-delay:.12s}
+  .stat-card:nth-child(3){animation-delay:.19s}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Welcome Hero -->
+<div class="welcome-hero">
+  <div class="wh-blob wh-b1"></div>
+  <div class="wh-blob wh-b2"></div>
+  <div class="wh-greeting"><span class="wh-dot"></span> Session Active</div>
+  <h1 class="wh-title">Welcome back, <em>{{ request.session.loggeduser|default:"User" }}</em></h1>
+  <p class="wh-sub">You have access to the AI oral cancer detection tools below. Upload an oral image to receive an instant screening report, or run model training to view performance metrics.</p>
+  <div class="wh-actions">
+    <a href="{% url 'predict_image' %}" class="btn-wh-primary">
+      <i class="bi bi-search-heart"></i> Start Prediction
+    </a>
+    <a href="{% url 'train_model' %}" class="btn-wh-ghost">
+      <i class="bi bi-cpu"></i> View Training
+    </a>
+  </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--blue-pale);">
+        <i class="bi bi-activity" style="color:var(--blue);"></i>
+      </div>
+      <div>
+        <div class="stat-val">84.69%</div>
+        <div class="stat-lbl">MobileNet Accuracy</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--green-pale);">
+        <i class="bi bi-images" style="color:var(--green);"></i>
+      </div>
+      <div>
+        <div class="stat-val">950</div>
+        <div class="stat-lbl">Training Images</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--amber-pale);">
+        <i class="bi bi-lightning-charge" style="color:var(--amber);"></i>
+      </div>
+      <div>
+        <div class="stat-val">&lt; 2s</div>
+        <div class="stat-lbl">Avg Prediction Time</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tool Cards -->
+<div class="page-header reveal">
+  <h2 class="page-title">AI Detection Tools</h2>
+  <p class="page-sub">Choose a tool to get started</p>
+</div>
+
+<div class="row g-4 reveal">
+  <div class="col-md-6 col-lg-4">
+    <a href="{% url 'predict_image' %}" class="tool-card blue">
+      <div class="tool-icon" style="background:var(--blue-pale);">
+        <i class="bi bi-search-heart" style="color:var(--blue);"></i>
+      </div>
+      <div class="tool-title">Predict Image</div>
+      <p class="tool-desc">Upload an oral image and receive an instant AI-generated classification — Cancer, Non-Cancer, or Invalid — along with confidence scores.</p>
+      <span class="tool-cta">Run Prediction <i class="bi bi-arrow-right"></i></span>
+    </a>
+  </div>
+  <div class="col-md-6 col-lg-4">
+    <a href="{% url 'train_model' %}" class="tool-card green">
+      <div class="tool-icon" style="background:var(--green-pale);">
+        <i class="bi bi-cpu" style="color:var(--green);"></i>
+      </div>
+      <div class="tool-title">Model Training</div>
+      <p class="tool-desc">View training accuracy graphs and confusion matrices for both the CNN baseline and the MobileNet V2 model used in this system.</p>
+      <span class="tool-cta">View Training Results <i class="bi bi-arrow-right"></i></span>
+    </a>
+  </div>
+  <div class="col-md-6 col-lg-4">
+    <div class="tool-card amber" style="cursor:default;">
+      <div class="tool-icon" style="background:var(--amber-pale);">
+        <i class="bi bi-bar-chart-line" style="color:var(--amber);"></i>
+      </div>
+      <div class="tool-title">Model Overview</div>
+      <p class="tool-desc">MobileNet V2 fine-tuned on 950 oral images (500 cancer, 450 non-cancer). Input size 224×224 px, trained with transfer learning.</p>
+      <span class="tool-cta" style="color:var(--amber);">Architecture: MobileNet V2 <i class="bi bi-info-circle"></i></span>
+    </div>
+  </div>
+</div>
+
+<!-- Disclaimer -->
+<div class="info-banner reveal">
+  <i class="bi bi-exclamation-triangle-fill"></i>
+  <div>
+    <div class="info-banner-title">Medical Disclaimer</div>
+    <p class="info-banner-text">
+      This AI tool is a <strong>decision-support aid only</strong> and does not replace professional medical diagnosis. All AI outputs must be reviewed by a qualified healthcare provider before any clinical decisions are made.
+    </p>
+  </div>
+</div>
+
+{% endblock %}

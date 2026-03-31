@@ -1,0 +1,17 @@
+﻿:root {
+  --primary: #007bff;
+  --bg: #f8f9fa;
+  --card: #ffffff;
+}
+body {
+  background: linear-gradient(135deg, #e9f2ff 0%, #ffffff 100%);
+  color: #1f2937;
+}
+.navbar-brand,
+.nav-link,
+footer { color: #ffffff !important; }
+.hero-cta { background: rgba(255, 255, 255, 0.88); border-radius: 18px; }
+.card, .login-card, .admin-login-card { border-radius: 12px; box-shadow: 0 20px 35px rgba(0,0,0,0.08); }
+.form-control { border-radius: 8px; }
+.btn-primary { background-image: linear-gradient(130deg, #0d6efd 0%, #6610f2 100%); border: none; }
+.alert { border-radius: 8px; }

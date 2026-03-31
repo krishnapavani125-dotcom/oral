@@ -1,0 +1,264 @@
+{% extends 'admins/admin_base.html' %}
+{% load static %}
+
+{% block title %}Dashboard — OralScan AI Admin{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── WELCOME HERO ─────────────────────────────────── */
+  .welcome-hero {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.8) 55%, rgba(220, 38, 38, 0.15) 100%);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 2.25rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+  }
+  .welcome-hero::before {
+    content:''; position:absolute; inset:0;
+    background-image: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size: 24px 24px; pointer-events:none;
+  }
+  .wh-blob {
+    position:absolute; border-radius:50%; pointer-events:none; filter:blur(60px);
+  }
+  .wh-b1 { width:300px; height:300px; background:rgba(26,86,219,.25); top:-100px; right:-60px; }
+  .wh-b2 { width:200px; height:200px; background:rgba(220,38,38,.12); bottom:-60px; left:0; }
+
+  .wh-badge {
+    display:inline-flex; align-items:center; gap:.4rem;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+    color:rgba(255,255,255,.8); font-size:.68rem; font-weight:700;
+    letter-spacing:.09em; text-transform:uppercase;
+    padding:.26rem .8rem; border-radius:999px; margin-bottom:.9rem;
+    position:relative;
+  }
+  .wh-dot {
+    width:6px; height:6px; border-radius:50%; background:#4ade80;
+    box-shadow:0 0 6px #4ade80;
+    animation:blink 2s ease-in-out infinite;
+  }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .wh-title {
+    font-family:var(--font-h); font-size:clamp(1.5rem,3vw,2.2rem);
+    font-weight:700; color:white; line-height:1.15;
+    letter-spacing:-.025em; margin-bottom:.55rem; position:relative;
+  }
+  .wh-title em { font-style:normal; color:#93c5fd; }
+
+  .wh-sub {
+    font-size:.9rem; color:rgba(255,255,255,.6); line-height:1.75;
+    max-width:480px; margin-bottom:1.75rem; position:relative;
+  }
+
+  .wh-actions { display:flex; gap:.75rem; flex-wrap:wrap; position:relative; }
+
+  .btn-wh-primary {
+    background:white; color:var(--ink);
+    font-weight:800; font-size:.875rem; border:none;
+    border-radius:var(--radius-sm); padding:.65rem 1.5rem;
+    display:inline-flex; align-items:center; gap:.4rem;
+    text-decoration:none; cursor:pointer;
+    transition:background .2s, transform .15s, box-shadow .2s;
+  }
+  .btn-wh-primary:hover { background:#e0eaff; color:var(--blue); transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,0,0,.2); }
+
+  .btn-wh-ghost {
+    background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.22);
+    color:rgba(255,255,255,.85); font-weight:700; font-size:.875rem;
+    border-radius:var(--radius-sm); padding:.63rem 1.4rem;
+    display:inline-flex; align-items:center; gap:.4rem;
+    text-decoration:none; cursor:pointer; transition:all .2s;
+  }
+  .btn-wh-ghost:hover { background:rgba(255,255,255,.15); color:white; transform:translateY(-2px); }
+
+  /* ── STAT CARDS ──────────────────────────────────── */
+  .stat-card { animation:fadeIn .4s ease both; }
+  .stat-card:nth-child(1){ animation-delay:.05s; }
+  .stat-card:nth-child(2){ animation-delay:.12s; }
+  .stat-card:nth-child(3){ animation-delay:.19s; }
+  .stat-card:nth-child(4){ animation-delay:.26s; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── QUICK ACTIONS ───────────────────────────────── */
+  .qa-card {
+    background: var(--white);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    display: flex; align-items: center; gap: 1.1rem;
+    text-decoration: none; color: var(--text);
+    transition: box-shadow .22s, transform .22s, border-color .22s;
+    position: relative; overflow: hidden;
+  }
+  .qa-card::after {
+    content:''; position:absolute;
+    top:0; left:0; right:0; height:2px;
+    transform:scaleX(0); transform-origin:left;
+    transition:transform .28s ease;
+  }
+  .qa-card:hover { box-shadow:var(--sh-md); transform:translateY(-3px); color:var(--text); }
+  .qa-card:hover::after { transform:scaleX(1); }
+  .qa-card.blue::after  { background:var(--blue); }
+  .qa-card.red::after   { background:var(--red); }
+  .qa-card.green::after { background:var(--green); }
+
+  .qa-icon {
+    width:50px; height:50px; flex-shrink:0;
+    border-radius:13px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.25rem;
+  }
+  .qa-title { font-weight:700; font-size:.95rem; color:var(--ink); margin-bottom:.2rem; }
+  .qa-desc  { font-size:.8rem; color:#334e68; line-height:1.55; }
+  .qa-arrow { margin-left:auto; flex-shrink:0; color:var(--muted); font-size:.9rem; transition:transform .2s; }
+  .qa-card:hover .qa-arrow { transform:translateX(3px); color:var(--ink); }
+
+  /* ── INFO BOX ────────────────────────────────────── */
+  .info-box {
+    background: var(--blue-pale); 
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--blue-border);
+    border-radius: var(--radius); padding: 1.25rem 1.5rem;
+    display: flex; align-items: flex-start; gap: .75rem;
+  }
+  .info-box i { color: var(--blue); flex-shrink: 0; margin-top: .1rem; font-size: 1.1rem; }
+  .info-box-title { font-weight: 700; color: var(--blue); font-size: .9rem; margin-bottom: .25rem; }
+  .info-box-text  { font-size: .83rem; color: var(--muted); line-height: 1.65; margin: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Welcome Hero -->
+<div class="welcome-hero reveal">
+  <div class="wh-blob wh-b1"></div>
+  <div class="wh-blob wh-b2"></div>
+  <div class="wh-badge"><span class="wh-dot"></span> Admin Session Active</div>
+  <h1 class="wh-title">Welcome to the <em>Admin Panel</em></h1>
+  <p class="wh-sub">
+    Manage registered users, review account activation requests, and monitor the OralScan AI oral cancer detection system from this dashboard.
+  </p>
+  <div class="wh-actions">
+    <a href="{% url 'view_registered_users' %}" class="btn-wh-primary">
+      <i class="bi bi-people-fill"></i> View Registered Users
+    </a>
+    <a href="{% url 'index' %}" class="btn-wh-ghost">
+      <i class="bi bi-box-arrow-left"></i> Logout
+    </a>
+  </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--blue-pale);">
+        <i class="bi bi-people-fill" style="color:var(--blue);"></i>
+      </div>
+      <div>
+        <div class="stat-val">—</div>
+        <div class="stat-lbl">Total Users</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--amber-pale);">
+        <i class="bi bi-hourglass-split" style="color:var(--amber);"></i>
+      </div>
+      <div>
+        <div class="stat-val">—</div>
+        <div class="stat-lbl">Pending Activation</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--green-pale);">
+        <i class="bi bi-check-circle-fill" style="color:var(--green);"></i>
+      </div>
+      <div>
+        <div class="stat-val">—</div>
+        <div class="stat-lbl">Activated</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--red-pale);">
+        <i class="bi bi-cpu" style="color:var(--red);"></i>
+      </div>
+      <div>
+        <div class="stat-val">84.69%</div>
+        <div class="stat-lbl">Model Accuracy</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="page-header reveal">
+  <h2 class="page-title">Quick Actions</h2>
+  <p class="page-sub">Common administrative tasks</p>
+</div>
+
+<div class="row g-3 mb-4 reveal">
+  <div class="col-md-6 col-lg-4">
+    <a href="{% url 'view_registered_users' %}" class="qa-card blue">
+      <div class="qa-icon" style="background:var(--blue-pale);">
+        <i class="bi bi-people" style="color:var(--blue);"></i>
+      </div>
+      <div>
+        <div class="qa-title">Registered Users</div>
+        <p class="qa-desc">View all users, check activation status, and approve pending accounts.</p>
+      </div>
+      <i class="bi bi-arrow-right qa-arrow"></i>
+    </a>
+  </div>
+  <div class="col-md-6 col-lg-4">
+    <a href="{% url 'index' %}" class="qa-card red">
+      <div class="qa-icon" style="background:var(--red-pale);">
+        <i class="bi bi-box-arrow-left" style="color:var(--red);"></i>
+      </div>
+      <div>
+        <div class="qa-title">Logout</div>
+        <p class="qa-desc">End your admin session and return to the public-facing OralScan homepage.</p>
+      </div>
+      <i class="bi bi-arrow-right qa-arrow"></i>
+    </a>
+  </div>
+  <div class="col-md-6 col-lg-4">
+    <div class="qa-card green" style="cursor:default;">
+      <div class="qa-icon" style="background:var(--green-pale);">
+        <i class="bi bi-bar-chart-line" style="color:var(--green);"></i>
+      </div>
+      <div>
+        <div class="qa-title">Model Stats</div>
+        <p class="qa-desc">MobileNet V2 — 84.69% accuracy on 950 training images across 2 classes.</p>
+      </div>
+      <i class="bi bi-info-circle qa-arrow"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Info box -->
+<div class="info-box reveal">
+  <i class="bi bi-shield-check"></i>
+  <div>
+    <div class="info-box-title">Admin Responsibilities</div>
+    <p class="info-box-text">
+      As an administrator you are responsible for reviewing and activating new user accounts before they can access the AI screening tool. All AI outputs must be treated as <strong>decision-support aids</strong> and reviewed by qualified healthcare providers.
+    </p>
+  </div>
+</div>
+{% endblock %}

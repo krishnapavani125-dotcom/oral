@@ -1,0 +1,291 @@
+{% extends 'users/user_base.html' %}
+
+{% block title %}Training Results — OralScan AI{% endblock %}
+{% block breadcrumb %}Training Results{% endblock %}
+{% block nav_train %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── MODEL SECTION CARD ───────────────────────── */
+  .model-section {
+    background: var(--white);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    animation: fadeUp .4s ease both;
+  }
+  .model-section:nth-child(2){ animation-delay:.08s; }
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+  /* coloured top bar */
+  .ms-bar {
+    height: 4px;
+  }
+  .ms-bar.cnn       { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+  .ms-bar.mobilenet { background: linear-gradient(90deg, var(--blue), #60a5fa); }
+
+  /* header strip */
+  .ms-header {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1.5rem 1.75rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .ms-icon {
+    width: 46px; height: 46px; flex-shrink: 0;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem;
+  }
+  .ms-icon.cnn       { background: #f5f3ff; color: #7c3aed; }
+  .ms-icon.mobilenet { background: var(--blue-pale); color: var(--blue); }
+
+  .ms-title { font-family:var(--font-h); font-weight:700; font-size:1.2rem; color:var(--ink); margin-bottom:.1rem; }
+  .ms-sub   { font-size:.82rem; color:#334e68; }
+
+  .ms-acc-badge {
+    margin-left: auto; flex-shrink: 0;
+    display: inline-flex; align-items: center; gap: .45rem;
+    border-radius: var(--radius-sm);
+    padding: .45rem 1.1rem;
+    font-family: var(--font-h); font-weight: 700; font-size: 1.05rem;
+  }
+  .ms-acc-badge.cnn       { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+  .ms-acc-badge.mobilenet { background: var(--blue-pale); color: var(--blue-dk); border: 1px solid var(--blue-border); }
+  .ms-acc-badge .badge-label { font-family:var(--font-b); font-size:.7rem; font-weight:600; opacity:.7; margin-right:.2rem; }
+
+  /* body */
+  .ms-body { padding: 1.75rem; }
+
+  /* accuracy progress */
+  .acc-progress {
+    display: flex; align-items: center; gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .acc-label { font-size:.8rem; font-weight:700; color:#334e68; white-space:nowrap; }
+  .acc-track {
+    flex: 1; background: var(--surface2);
+    border-radius: 999px; height: 9px; overflow: hidden;
+  }
+  .acc-fill {
+    height: 100%; border-radius: 999px;
+    animation: growBar .9s ease forwards;
+    transform-origin: left;
+  }
+  @keyframes growBar{from{width:0%}}
+  .acc-fill.cnn       { background: linear-gradient(90deg, #a78bfa, #7c3aed); }
+  .acc-fill.mobilenet { background: linear-gradient(90deg, #60a5fa, #1a56db); }
+  .acc-val { font-family:var(--font-h); font-size:1rem; font-weight:700; color:var(--ink); white-space:nowrap; }
+
+  /* plot image */
+  .plot-wrap {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  .plot-wrap img {
+    max-width: 100%; border-radius: var(--radius-sm);
+  }
+  .plot-label {
+    font-size:.72rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.09em; color:var(--muted); margin-bottom:.75rem;
+    display: flex; align-items: center; gap: .4rem;
+  }
+
+  /* confusion matrix */
+  .cm-section-title {
+    font-size:.72rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.09em; color:var(--muted);
+    margin-bottom:.85rem; margin-top:1.5rem;
+    display: flex; align-items: center; gap: .4rem;
+  }
+
+  .cm-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  .cm-table {
+    width: 100%; border-collapse: collapse; margin: 0;
+    font-family: var(--font-b); font-size: .85rem;
+  }
+  .cm-table th, .cm-table td {
+    padding: .65rem 1rem;
+    text-align: center; border: 1px solid var(--border);
+  }
+  .cm-table thead th {
+    background: rgba(15, 23, 42, 0.9); color: rgba(255,255,255,.8);
+    font-size: .72rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+    border-color: rgba(255,255,255,.1);
+  }
+  .cm-table thead th:first-child { background: rgba(255, 255, 255, 0.03); color: var(--muted); }
+
+  .cm-table tbody th {
+    background: rgba(255, 255, 255, 0.03); font-weight: 700; color: var(--muted);
+    font-size: .78rem;
+  }
+
+  /* diagonal highlight (true positives) */
+  .cm-table tbody td {
+    font-weight: 600; color: var(--text);
+    transition: background .15s;
+  }
+  .cm-table tbody tr:hover td,
+  .cm-table tbody tr:hover th { background: var(--blue-pale); }
+
+  .cm-high {
+    background: var(--green-pale) !important;
+    color: var(--green) !important;
+    font-weight: 800 !important;
+  }
+  .cm-low {
+    background: var(--red-pale) !important;
+    color: var(--red) !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header reveal">
+  <h1 class="page-title">Training Results</h1>
+  <p class="page-sub">Validation accuracy, training plots, and confusion matrices for both models.</p>
+</div>
+
+<!-- ══ CNN MODEL ═══════════════════════════════════ -->
+<div class="model-section reveal">
+  <div class="ms-bar cnn"></div>
+  <div class="ms-header">
+    <div class="ms-icon cnn"><i class="bi bi-grid-3x3-gap-fill"></i></div>
+    <div>
+      <div class="ms-title">CNN Baseline Model</div>
+      <div class="ms-sub">Custom convolutional neural network — baseline architecture</div>
+    </div>
+    <div class="ms-acc-badge cnn">
+      <span class="badge-label">Val Acc</span>
+      {{ cnn_accuracy }}%
+    </div>
+  </div>
+
+  <div class="ms-body">
+    <!-- Accuracy bar -->
+    <div class="acc-progress">
+      <span class="acc-label">Validation Accuracy</span>
+      <div class="acc-track">
+        <div class="acc-fill cnn" style="width:{{ cnn_accuracy }}%;"></div>
+      </div>
+      <span class="acc-val">{{ cnn_accuracy }}%</span>
+    </div>
+
+    <!-- Training plot -->
+    <div class="plot-label">
+      <i class="bi bi-graph-up" style="color:#7c3aed;"></i>
+      Training Accuracy &amp; Loss Plot
+    </div>
+    <div class="plot-wrap">
+      <img src="/{{ cnn_plot }}" alt="CNN Training Plot" />
+    </div>
+
+    <!-- Confusion Matrix -->
+    <div class="cm-section-title">
+      <i class="bi bi-table" style="color:#7c3aed;"></i>
+      Confusion Matrix
+    </div>
+    <div class="cm-table-wrap">
+      <table class="cm-table">
+        <thead>
+          <tr>
+            <th>Actual \ Predicted</th>
+            {% for c in classes %}
+              <th>{{ c }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in cnn_cm %}
+          <tr>
+            <th>Class {{ forloop.counter }}</th>
+            {% for val in row %}
+              <td {% if forloop.counter == forloop.parentloop.counter %}class="cm-high"{% elif val > 0 %}class="cm-low"{% endif %}>
+                {{ val }}
+              </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MOBILENET MODEL ═════════════════════════════ -->
+<div class="model-section reveal">
+  <div class="ms-bar mobilenet"></div>
+  <div class="ms-header">
+    <div class="ms-icon mobilenet"><i class="bi bi-cpu-fill"></i></div>
+    <div>
+      <div class="ms-title">MobileNet V2 Model</div>
+      <div class="ms-sub">Transfer-learning model — production classifier</div>
+    </div>
+    <div class="ms-acc-badge mobilenet">
+      <span class="badge-label">Val Acc</span>
+      {{ mobilenet_accuracy }}%
+    </div>
+  </div>
+
+  <div class="ms-body">
+    <div class="acc-progress">
+      <span class="acc-label">Validation Accuracy</span>
+      <div class="acc-track">
+        <div class="acc-fill mobilenet" style="width:{{ mobilenet_accuracy }}%;"></div>
+      </div>
+      <span class="acc-val">{{ mobilenet_accuracy }}%</span>
+    </div>
+
+    <div class="plot-label">
+      <i class="bi bi-graph-up" style="color:var(--blue);"></i>
+      Training Accuracy &amp; Loss Plot
+    </div>
+    <div class="plot-wrap">
+      <img src="/{{ mobilenet_plot }}" alt="MobileNet Training Plot" />
+    </div>
+
+    <div class="cm-section-title">
+      <i class="bi bi-table" style="color:var(--blue);"></i>
+      Confusion Matrix
+    </div>
+    <div class="cm-table-wrap">
+      <table class="cm-table">
+        <thead>
+          <tr>
+            <th>Actual \ Predicted</th>
+            {% for c in classes %}
+              <th>{{ c }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in mobilenet_cm %}
+          <tr>
+            <th>Class {{ forloop.counter }}</th>
+            {% for val in row %}
+              <td {% if forloop.counter == forloop.parentloop.counter %}class="cm-high"{% elif val > 0 %}class="cm-low"{% endif %}>
+                {{ val }}
+              </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

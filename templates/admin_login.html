@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% block admin %}active{% endblock %}
+{% block title %}Admin Login — OralScan AI{% endblock %}
+
+{% block extra_css %}
+<style>
+  .admin-login-section {
+    min-height: calc(100vh - 72px);
+    display: flex;
+    align-items: center;
+    padding: 3rem 0;
+    background: transparent;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* tight dot grid */
+  .admin-login-section::before {
+    content:'';
+    position:absolute; inset:0;
+    background-image: radial-gradient(circle at 2px 2px, rgba(220, 38, 38, 0.1) 1px, transparent 0);
+    background-size: 32px 32px;
+    opacity: .4;
+    pointer-events:none;
+  }
+
+  /* red + blue blobs for admin feel */
+  .abl { position:absolute; border-radius:50%; pointer-events:none; filter:blur(90px); }
+  .abl-1 { width:400px; height:400px; background:rgba(26,86,219,.10); top:-100px; right:-80px; }
+  .abl-2 { width:280px; height:280px; background:rgba(220,38,38,.07);  bottom:-60px; left:-50px; }
+
+  /* ── CARD ── */
+  .admin-card {
+    background: var(--white);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--sh-lg);
+    overflow: hidden;
+    position: relative; z-index: 1;
+    width: 100%; max-width: 440px;
+    margin: 0 auto;
+    animation: slideUp .48s ease both;
+  }
+  @keyframes slideUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+
+  /* top stripe — red accent for admin */
+  .admin-card::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background: linear-gradient(90deg, #dc2626, #f97316, #dc2626);
+    background-size:200% 100%;
+    animation:shimmer 2.5s linear infinite;
+  }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* header */
+  .admin-head {
+    padding:2.15rem 2.25rem 1.4rem;
+    background: linear-gradient(160deg, rgba(220, 38, 38, 0.05) 0%, transparent 100%);
+    border-bottom:1px solid var(--border);
+  }
+
+  .admin-logo { display:flex; align-items:center; gap:.65rem; margin-bottom:1.25rem; }
+  .admin-logo-icon {
+    width:42px; height:42px;
+    background: linear-gradient(145deg, #dc2626, #991b1b);
+    border-radius:11px;
+    display:flex; align-items:center; justify-content:center;
+    color:white; font-size:1.05rem;
+    box-shadow: 0 4px 12px rgba(220,38,38,.3);
+  }
+  .admin-logo-name { font-weight:800; font-size:1.05rem; color:var(--ink); letter-spacing:-.02em; line-height:1.1; }
+  .admin-logo-sub  { font-size:.6rem; font-weight:600; color:#dc2626; letter-spacing:.09em; text-transform:uppercase; }
+
+  .admin-title { font-family:var(--font-h); font-size:1.55rem; font-weight:700; color:var(--ink); letter-spacing:-.02em; margin-bottom:.3rem; }
+  .admin-sub   { font-size:.875rem; color:#334e68; line-height:1.6; }
+
+  /* badge */
+  .admin-badge {
+    display:inline-flex; align-items:center; gap:.45rem;
+    background:rgba(220, 38, 38, 0.08); 
+    border:1px solid rgba(220, 38, 38, 0.25);
+    color:#f87171; font-size:.7rem; font-weight:700;
+    letter-spacing:.08em; text-transform:uppercase;
+    padding:.28rem .8rem; border-radius:999px; margin-bottom:.9rem;
+  }
+  .admin-badge i { font-size:.7rem; }
+
+  /* body */
+  .admin-body { padding:1.85rem 2.25rem 2.25rem; }
+
+  /* fields */
+  .field-wrap { position:relative; margin-bottom:0; }
+  .field-icon {
+    position:absolute; left:.9rem; top:50%; transform:translateY(-50%);
+    color:var(--muted); font-size:.9rem; pointer-events:none; z-index:2;
+    transition:color .2s;
+  }
+  .field-wrap:focus-within .field-icon { color:#dc2626; }
+  .field-wrap .form-control {
+    padding-left:2.45rem; height:46px;
+    border-radius:var(--radius-sm); font-size:.9rem;
+  }
+  .field-wrap .form-control:focus {
+    border-color:#dc2626;
+    box-shadow:0 0 0 3px rgba(220,38,38,.12);
+  }
+  .field-label { font-size:.8rem; font-weight:700; color:var(--ink); margin-bottom:.38rem; display:block; }
+
+  .pwd-toggle {
+    position:absolute; right:.9rem; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer;
+    color:var(--muted); font-size:.9rem; padding:0; z-index:2;
+    transition:color .2s;
+  }
+  .pwd-toggle:hover { color:#dc2626; }
+
+  /* submit */
+  .btn-admin-login {
+    width:100%;
+    background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%);
+    color:white; border:none; border-radius:var(--radius-sm);
+    height:48px;
+    font-family:var(--font-b); font-weight:800; font-size:.93rem;
+    display:flex; align-items:center; justify-content:center; gap:.5rem;
+    cursor:pointer;
+    transition:transform .15s, box-shadow .2s, opacity .2s;
+    box-shadow:0 4px 14px rgba(220,38,38,.3);
+    margin-top:1.5rem;
+  }
+  .btn-admin-login:hover {
+    transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(220,38,38,.4);
+    opacity:.92;
+  }
+
+  /* divider */
+  .divider-row { display:flex; align-items:center; gap:.75rem; margin:1.25rem 0; }
+  .divider-line { flex:1; height:1px; background:var(--border); }
+  .divider-text { font-size:.75rem; color:var(--muted); font-weight:500; white-space:nowrap; }
+
+  .admin-footer { text-align:center; font-size:.875rem; color:var(--muted); margin-top:1.1rem; }
+  .admin-footer a { color:var(--blue); font-weight:700; text-decoration:none; }
+  .admin-footer a:hover { color:var(--blue-dk); text-decoration:underline; }
+
+  /* security notice */
+  .security-note {
+    display:flex; align-items:flex-start; gap:.6rem;
+    background:rgba(220, 38, 38, 0.05); 
+    border:1px solid rgba(220, 38, 38, 0.15);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border-radius:var(--radius-sm);
+    padding:.75rem 1rem; margin-bottom:1.35rem;
+    font-size:.8rem; color:var(--muted); line-height:1.55;
+  }
+  .security-note i { color:#dc2626; flex-shrink:0; margin-top:.05rem; }
+  .security-note strong { color: #f87171; }
+
+  @media (max-width:575px) {
+    .admin-head, .admin-body { padding-left:1.35rem; padding-right:1.35rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}{% endblock %}
+
+{% block hero %}
+<div class="admin-login-section">
+  <div class="abl abl-1"></div>
+  <div class="abl abl-2"></div>
+
+  <div class="container position-relative" style="z-index:1;">
+    <div class="row justify-content-center">
+      <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
+
+        <div class="admin-card">
+
+          <!-- Header -->
+          <div class="admin-head">
+            <div class="admin-badge">
+              <i class="bi bi-shield-lock-fill"></i> Admin Portal
+            </div>
+            <div class="admin-logo">
+              <div class="admin-logo-icon"><i class="bi bi-activity"></i></div>
+              <div>
+                <div class="admin-logo-name">OralScan AI</div>
+                <div class="admin-logo-sub">Admin Access</div>
+              </div>
+            </div>
+            <h1 class="admin-title">Admin Sign In</h1>
+            <p class="admin-sub">Restricted area. Authorised administrators only.</p>
+          </div>
+
+          <!-- Body -->
+          <div class="admin-body">
+
+            <div class="security-note">
+              <i class="bi bi-shield-exclamation"></i>
+              <span>This portal is for <strong>system administrators only</strong>. Unauthorised access attempts are logged and monitored.</span>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'danger' }} d-flex align-items-center gap-2 mb-3" role="alert">
+                  <i class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
+                  <div>{{ message }}</div>
+                </div>
+              {% endfor %}
+            {% endif %}
+
+            <form action="{% url 'admin_login_check' %}" method="POST" novalidate>
+              {% csrf_token %}
+
+              <div class="mb-1">
+                <label class="field-label" for="admin-id">Admin ID</label>
+                <div class="field-wrap">
+                  <i class="bi bi-shield-lock field-icon"></i>
+                  <input id="admin-id" type="text" name="loginid" class="form-control" required autocomplete="username" placeholder="Enter your admin ID">
+                </div>
+              </div>
+
+              <div class="mt-3 mb-1">
+                <label class="field-label" for="admin-pwd">Password</label>
+                <div class="field-wrap">
+                  <i class="bi bi-lock field-icon"></i>
+                  <input id="admin-pwd" type="password" name="password" class="form-control" required autocomplete="current-password" placeholder="Enter your password" style="padding-right:2.75rem;">
+                  <button type="button" class="pwd-toggle" id="pwdToggle" aria-label="Toggle password">
+                    <i class="bi bi-eye" id="pwdIcon"></i>
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-admin-login">
+                <i class="bi bi-shield-check"></i>
+                Access Admin Panel
+              </button>
+            </form>
+
+            <div class="divider-row">
+              <span class="divider-line"></span>
+              <span class="divider-text">Not an admin?</span>
+              <span class="divider-line"></span>
+            </div>
+
+            <a href="{% url 'user_login' %}" class="btn-outline-blue w-100 justify-content-center" style="height:44px; font-size:.88rem;">
+              <i class="bi bi-person"></i> Go to User Login
+            </a>
+
+            <p class="admin-footer mt-3">
+              New user? <a href="{% url 'register' %}">Create an account <i class="bi bi-arrow-right" style="font-size:.75rem;"></i></a>
+            </p>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const toggle = document.getElementById('pwdToggle');
+  const input  = document.getElementById('admin-pwd');
+  const icon   = document.getElementById('pwdIcon');
+  if (toggle) {
+    toggle.addEventListener('click', () => {
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,436 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <title>{% block title %}Admin Panel — OralScan AI{% endblock %}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    /* ══ TOKENS ══════════════════════════════════════ */
+    :root {
+      /* shared */
+      --ink:        #f8fafc;
+      --ink-mid:    #cbd5e1;
+      --blue:       #3b82f6;
+      --blue-dk:    #2563eb;
+      --blue-pale:  rgba(59, 130, 246, 0.1);
+      --blue-border:rgba(59, 130, 246, 0.2);
+      --red:        #f87171;
+      --red-pale:   rgba(239, 68, 68, 0.1);
+      --green:      #4ade80;
+      --green-pale: rgba(34, 197, 94, 0.1);
+      --amber:      #fbbf24;
+      --amber-pale: rgba(245, 158, 11, 0.1);
+      --white:      rgba(15, 23, 42, 0.6);
+      --surface:    #050810;
+      --surface2:   #0b1120;
+      --border:     rgba(255, 255, 255, 0.08);
+      --text:       #f8fafc;
+      --muted:      #94a3b8;
+      --radius-sm:  10px;
+      --radius:     16px;
+      --radius-lg:  24px;
+      --sh-xs: 0 1px 3px rgba(0,0,0,.3);
+      --sh-sm: 0 4px 12px rgba(0,0,0,.4);
+      --sh-md: 0 8px 30px rgba(0,0,0,.5);
+      --font-h: 'Fraunces', Georgia, serif;
+      --font-b: 'Plus Jakarta Sans', sans-serif;
+      --glass: saturate(180%) blur(12px);
+
+      /* admin sidebar */
+      --sb-bg:      #0b1628;
+      --sb-border:  rgba(255,255,255,.07);
+      --sb-width:   240px;
+      --sb-width-c: 68px;  /* collapsed */
+      --topbar-h:   60px;
+    }
+
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body {
+      font-family: var(--font-b);
+      background-color: var(--surface);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(220, 38, 38, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ══ SIDEBAR ══════════════════════════════════════ */
+    .a-sidebar {
+      width: var(--sb-width);
+      min-height: 100vh;
+      background: var(--sb-bg);
+      display: flex;
+      flex-direction: column;
+      position: fixed; top:0; left:0; bottom:0;
+      z-index: 1040;
+      transition: width .25s ease, transform .25s ease;
+      overflow: hidden;
+    }
+
+    /* ── Brand ── */
+    .sb-brand {
+      display: flex; align-items: center; gap: .65rem;
+      padding: 1.1rem 1.1rem 1rem;
+      border-bottom: 1px solid var(--sb-border);
+      min-height: var(--topbar-h);
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .sb-brand-icon {
+      width: 38px; height: 38px; flex-shrink: 0;
+      background: linear-gradient(145deg, #dc2626 0%, #991b1b 100%);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: .95rem;
+      box-shadow: 0 3px 10px rgba(220,38,38,.35);
+    }
+    .sb-brand-name {
+      font-family: var(--font-b); font-weight: 800; font-size: .95rem;
+      color: white; letter-spacing: -.02em; line-height: 1.1;
+      white-space: nowrap;
+    }
+    .sb-brand-sub {
+      font-size: .55rem; font-weight: 600; color: rgba(255,255,255,.3);
+      letter-spacing: .1em; text-transform: uppercase;
+    }
+
+    /* ── Nav items ── */
+    .sb-nav { flex: 1; padding: 1rem .75rem; overflow-y: auto; }
+    .sb-section-label {
+      font-size: .6rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: rgba(255,255,255,.2);
+      padding: 0 .6rem; margin-bottom: .5rem; margin-top: 1.25rem;
+      white-space: nowrap; overflow: hidden;
+    }
+    .sb-section-label:first-child { margin-top: 0; }
+
+    .sb-link {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .6rem .85rem; border-radius: var(--radius-sm);
+      text-decoration: none; color: rgba(255,255,255,.5);
+      font-weight: 600; font-size: .85rem;
+      margin-bottom: .2rem; white-space: nowrap; overflow: hidden;
+      transition: background .18s, color .18s;
+      position: relative;
+    }
+    .sb-link i { font-size: 1rem; flex-shrink: 0; width: 20px; text-align: center; }
+    .sb-link:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.85); }
+    .sb-link.active {
+      background: rgba(26,86,219,.2);
+      color: #93c5fd;
+    }
+    .sb-link.active::before {
+      content: '';
+      position: absolute; left: 0; top: 8px; bottom: 8px;
+      width: 3px; border-radius: 0 3px 3px 0;
+      background: #3b82f6;
+    }
+    .sb-link.danger:hover { background: rgba(220,38,38,.15); color: #fca5a5; }
+
+    /* ── Badge on nav ── */
+    .sb-badge {
+      margin-left: auto; flex-shrink: 0;
+      background: rgba(220,38,38,.2); color: #fca5a5;
+      font-size: .62rem; font-weight: 800;
+      padding: .18rem .5rem; border-radius: 999px;
+    }
+
+    /* ── Footer ── */
+    .sb-footer {
+      padding: 1rem .75rem;
+      border-top: 1px solid var(--sb-border);
+      flex-shrink: 0;
+    }
+    .sb-user {
+      display: flex; align-items: center; gap: .7rem;
+      padding: .55rem .75rem; border-radius: var(--radius-sm);
+      background: rgba(255,255,255,.04);
+    }
+    .sb-user-avatar {
+      width: 32px; height: 32px; flex-shrink: 0;
+      background: linear-gradient(145deg, #dc2626, #7f1d1d);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem; color: white; font-weight: 700;
+    }
+    .sb-user-name { font-size: .8rem; font-weight: 700; color: rgba(255,255,255,.7); white-space: nowrap; }
+    .sb-user-role { font-size: .65rem; color: rgba(255,255,255,.3); }
+
+    /* ══ TOPBAR ══════════════════════════════════════ */
+    .a-topbar {
+      position: fixed; top: 0; right: 0;
+      left: var(--sb-width);
+      height: var(--topbar-h);
+      background: rgba(5, 8, 16, 0.8);
+      backdrop-filter: var(--glass);
+      -webkit-backdrop-filter: var(--glass);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 1.5rem;
+      z-index: 1030;
+      transition: left .25s ease;
+    }
+
+    .topbar-toggle {
+      background: none; border: none; cursor: pointer;
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 1.1rem;
+      transition: background .18s, color .18s;
+      margin-right: .75rem;
+    }
+    .topbar-toggle:hover { background: var(--surface2); color: var(--ink); }
+
+    .topbar-breadcrumb {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .82rem; color: var(--muted); font-weight: 500;
+    }
+    .topbar-breadcrumb .current { color: var(--ink); font-weight: 700; }
+
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: .75rem; }
+
+    .topbar-badge {
+      display: inline-flex; align-items: center; gap: .35rem;
+      background: var(--red-pale); color: var(--red);
+      font-size: .7rem; font-weight: 700;
+      padding: .25rem .7rem; border-radius: 999px;
+      border: 1px solid #fecaca;
+    }
+    .topbar-badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--red);
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .topbar-logout {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: var(--red-pale); color: var(--red);
+      border: 1.5px solid #fecaca;
+      font-weight: 700; font-size: .8rem;
+      padding: .38rem 1rem; border-radius: var(--radius-sm);
+      text-decoration: none;
+      transition: background .18s, transform .15s;
+    }
+    .topbar-logout:hover {
+      background: #fee2e2; color: #991b1b;
+      transform: translateY(-1px);
+    }
+
+    /* ══ MAIN AREA ══════════════════════════════════ */
+    .a-main {
+      margin-left: var(--sb-width);
+      padding-top: var(--topbar-h);
+      flex: 1;
+      min-height: 100vh;
+      transition: margin-left .25s ease;
+    }
+    .a-content { padding: 2rem 1.75rem; }
+
+    /* ══ COLLAPSED STATE ════════════════════════════ */
+    body.sb-collapsed .a-sidebar { width: var(--sb-width-c); }
+    body.sb-collapsed .a-main    { margin-left: var(--sb-width-c); }
+    body.sb-collapsed .a-topbar  { left: var(--sb-width-c); }
+    body.sb-collapsed .sb-brand-name,
+    body.sb-collapsed .sb-brand-sub,
+    body.sb-collapsed .sb-section-label,
+    body.sb-collapsed .sb-link span,
+    body.sb-collapsed .sb-badge,
+    body.sb-collapsed .sb-user-name,
+    body.sb-collapsed .sb-user-role { display: none; }
+    body.sb-collapsed .sb-link { justify-content: center; padding: .65rem; }
+    body.sb-collapsed .sb-link i { width: auto; }
+    body.sb-collapsed .sb-brand { justify-content: center; padding: 1rem .6rem; }
+    body.sb-collapsed .sb-user  { justify-content: center; padding: .55rem; }
+
+    /* ══ MOBILE ══════════════════════════════════════ */
+    @media (max-width: 991px) {
+      .a-sidebar { transform: translateX(-100%); width: var(--sb-width) !important; }
+      body.sb-open .a-sidebar { transform: translateX(0); }
+      .a-main   { margin-left: 0 !important; }
+      .a-topbar { left: 0 !important; }
+      .sb-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,.45); z-index: 1035;
+      }
+      body.sb-open .sb-overlay { display: block; }
+    }
+
+    /* ══ PAGE COMPONENTS ═════════════════════════════ */
+    .page-header {
+      margin-bottom: 1.75rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-title {
+      font-family: var(--font-h);
+      font-size: 1.55rem; font-weight: 700;
+      color: var(--ink); letter-spacing: -.02em; margin-bottom: .2rem;
+    }
+    .page-sub { font-size: .875rem; color: #334e68; }
+
+    .stat-card {
+      background: var(--white);
+      backdrop-filter: var(--glass);
+      -webkit-backdrop-filter: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.35rem 1.5rem;
+      display: flex; align-items: center; gap: 1.1rem;
+      transition: box-shadow .2s, transform .2s, border-color .2s;
+    }
+    .stat-card:hover { box-shadow: var(--sh-sm); transform: translateY(-2px); }
+    .stat-icon {
+      width: 48px; height: 48px; flex-shrink: 0;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .stat-val { font-family: var(--font-h); font-size: 1.6rem; font-weight: 700; color: var(--ink); line-height: 1; }
+    .stat-lbl { font-size: .78rem; color: #334e68; font-weight: 500; margin-top: .2rem; }
+
+    /* alert */
+    .alert { border-radius: var(--radius-sm); font-size:.875rem; border:none; border-left:4px solid; }
+    .alert-danger  { border-color:var(--red);   background:var(--red-pale);   color:#991b1b; }
+    .alert-success { border-color:var(--green); background:var(--green-pale); color:#14532d; }
+    .alert-warning { border-color:var(--amber); background:var(--amber-pale); color:#92400e; }
+    .alert-info    { border-color:var(--blue);  background:var(--blue-pale);  color:#1e40af; }
+
+    /* scroll reveal */
+    .reveal { opacity:0; transform:translateY(18px); transition:opacity .45s ease, transform .45s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+
+    {% block extra_css %}{% endblock %}
+  </style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ══════════════════════════════════════ -->
+<aside class="a-sidebar" id="sidebar">
+
+  <!-- Brand -->
+  <a class="sb-brand" href="{% url 'admin_home' %}">
+    <div class="sb-brand-icon"><i class="bi bi-activity"></i></div>
+    <div>
+      <div class="sb-brand-name">OralScan AI</div>
+      <div class="sb-brand-sub">Admin Panel</div>
+    </div>
+  </a>
+
+  <!-- Nav -->
+  <nav class="sb-nav">
+
+    <div class="sb-section-label">Overview</div>
+    <a href="{% url 'admin_home' %}" class="sb-link {% block nav_home %}{% endblock %}">
+      <i class="bi bi-house-door"></i><span>Dashboard</span>
+    </a>
+
+    <div class="sb-section-label">User Management</div>
+    <a href="{% url 'view_registered_users' %}" class="sb-link {% block nav_users %}{% endblock %}">
+      <i class="bi bi-people"></i><span>Registered Users</span>
+    </a>
+
+    <div class="sb-section-label">System</div>
+    <a href="{% url 'index' %}" class="sb-link danger">
+      <i class="bi bi-box-arrow-left"></i><span>Logout</span>
+    </a>
+
+  </nav>
+
+  <!-- Footer user chip -->
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-user-avatar"><i class="bi bi-shield-lock-fill" style="font-size:.75rem;"></i></div>
+      <div>
+        <div class="sb-user-name">Administrator</div>
+        <div class="sb-user-role">System Admin</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Mobile overlay -->
+<div class="sb-overlay" id="sbOverlay"></div>
+
+<!-- ═══ TOPBAR ════════════════════════════════════════ -->
+<header class="a-topbar">
+  <button class="topbar-toggle" id="sbToggle" aria-label="Toggle sidebar">
+    <i class="bi bi-list"></i>
+  </button>
+
+  <div class="topbar-breadcrumb">
+    <i class="bi bi-activity" style="color:var(--red);"></i>
+    <span>OralScan AI</span>
+    <i class="bi bi-chevron-right" style="font-size:.65rem;"></i>
+    <span class="current">{% block breadcrumb %}Admin Panel{% endblock %}</span>
+  </div>
+
+  <div class="topbar-right">
+    <span class="topbar-badge d-none d-sm-inline-flex">
+      <span class="topbar-badge-dot"></span>
+      Admin Session
+    </span>
+    <a href="{% url 'index' %}" class="topbar-logout">
+      <i class="bi bi-box-arrow-right"></i>
+      <span class="d-none d-sm-inline">Logout</span>
+    </a>
+  </div>
+</header>
+
+<!-- ═══ FLASH MESSAGES ════════════════════════════════ -->
+{% if messages %}
+<div style="position:fixed; top:calc(var(--topbar-h) + .75rem); right:1rem; z-index:2000; max-width:360px;">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show d-flex align-items-center gap-2 mb-2 shadow" role="alert">
+    <i class="bi bi-info-circle-fill flex-shrink-0"></i>
+    <div>{{ message }}</div>
+    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ═══ MAIN ══════════════════════════════════════════ -->
+<main class="a-main">
+  <div class="a-content">
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const body      = document.body;
+  const toggle    = document.getElementById('sbToggle');
+  const overlay   = document.getElementById('sbOverlay');
+  const isMobile  = () => window.innerWidth < 992;
+
+  toggle.addEventListener('click', () => {
+    if (isMobile()) body.classList.toggle('sb-open');
+    else            body.classList.toggle('sb-collapsed');
+  });
+  overlay.addEventListener('click', () => body.classList.remove('sb-open'));
+
+  // scroll reveal
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,453 @@
+{% extends 'base.html' %}
+{% block signup %}active{% endblock %}
+{% block title %}Create Account — OralScan AI{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── PAGE WRAPPER ───────────────────────────────── */
+  .register-section {
+    min-height: calc(100vh - 72px);
+    display: flex;
+    align-items: flex-start;
+    padding: 3.5rem 0 4rem;
+    background: transparent;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* grid texture */
+  .register-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: 
+      radial-gradient(circle at 2px 2px, var(--border) 1px, transparent 0);
+    background-size: 32px 32px;
+    opacity: .3;
+    pointer-events: none;
+  }
+
+  /* glow blobs */
+  .reg-blob {
+    position: absolute; border-radius: 50%;
+    pointer-events: none; filter: blur(100px);
+  }
+  .rb-1 { width:500px; height:500px; background:rgba(26,86,219,.08);  top:-160px; right:-120px; }
+  .rb-2 { width:320px; height:320px; background:rgba(22,163,74,.06);  bottom:-80px; left:-60px; }
+
+  /* ── CARD ───────────────────────────────────────── */
+  .reg-card {
+    background: var(--white);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--sh-lg);
+    overflow: hidden;
+    position: relative; z-index: 1;
+    animation: slideUp .5s ease both;
+  }
+  @keyframes slideUp {
+    from { opacity:0; transform:translateY(22px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* animated top bar */
+  .reg-card::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background: linear-gradient(90deg, var(--blue), #34d399, var(--blue));
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+  }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* ── CARD HEADER ────────────────────────────────── */
+  .reg-head {
+    padding: 2rem 2.25rem 1.5rem;
+    background: linear-gradient(160deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .reg-logo {
+    display: flex; align-items: center; gap: .6rem;
+    margin-bottom: 1.2rem;
+  }
+  .reg-logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(145deg, var(--blue), var(--ink-mid));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(26,86,219,.28);
+  }
+  .reg-logo-name  { font-weight: 800; font-size: 1rem; color: var(--ink); letter-spacing:-.02em; line-height:1.1; }
+  .reg-logo-sub   { font-size:.6rem; font-weight:600; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; }
+
+  .reg-title { font-family:var(--font-h); font-size:1.55rem; font-weight:700; color:var(--ink); letter-spacing:-.02em; line-height:1.15; margin-bottom:.3rem; }
+  .reg-sub   { font-size:.875rem; color:#334e68; line-height:1.6; }
+
+  /* ── CARD BODY ──────────────────────────────────── */
+  .reg-body { padding: 2rem 2.25rem 2.25rem; }
+
+  /* section divider inside form */
+  .form-section-label {
+    font-size:.68rem; font-weight:700; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--muted);
+    display:flex; align-items:center; gap:.6rem;
+    margin-bottom:1.1rem; margin-top:1.5rem;
+  }
+  .form-section-label:first-child { margin-top:0; }
+  .form-section-label::after {
+    content:''; flex:1; height:1px; background:var(--border);
+  }
+
+  /* input with icon */
+  .field-wrap { position:relative; }
+  .field-icon {
+    position:absolute; left:.9rem; top:50%; transform:translateY(-50%);
+    color:var(--muted); font-size:.9rem; pointer-events:none; z-index:2;
+    transition:color .2s;
+  }
+  .field-wrap:focus-within .field-icon { color:var(--blue); }
+  .field-wrap .form-control,
+  .field-wrap textarea.form-control {
+    padding-left:2.45rem;
+  }
+  .field-wrap textarea.form-control { padding-top:.65rem; }
+  .field-icon-top { top:1rem; transform:none; }
+
+  .field-label {
+    font-size:.8rem; font-weight:700; color:var(--ink);
+    letter-spacing:.01em; margin-bottom:.38rem; display:block;
+  }
+
+  /* password toggle */
+  .pwd-toggle {
+    position:absolute; right:.9rem; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer;
+    color:var(--muted); font-size:.9rem; padding:0; z-index:2;
+    transition:color .2s;
+  }
+  .pwd-toggle:hover { color:var(--blue); }
+
+  /* ── SUBMIT ─────────────────────────────────────── */
+  .btn-register {
+    width:100%;
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dk) 100%);
+    color:white; border:none; border-radius:var(--radius-sm);
+    height:50px;
+    font-family:var(--font-b); font-weight:800; font-size:.95rem;
+    display:flex; align-items:center; justify-content:center; gap:.5rem;
+    cursor:pointer;
+    transition:transform .15s, box-shadow .2s, opacity .2s;
+    box-shadow: 0 4px 14px rgba(26,86,219,.3);
+    margin-top:1.75rem;
+  }
+  .btn-register:hover {
+    transform:translateY(-2px);
+    box-shadow: 0 8px 24px rgba(26,86,219,.4);
+    opacity:.95;
+  }
+  .btn-register:active { transform:translateY(0); }
+
+  /* ── INFO BADGE ─────────────────────────────────── */
+  .info-badge {
+    display: flex; align-items: flex-start; gap: .6rem;
+    background: var(--blue-pale);
+    border: 1px solid var(--blue-border);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border-radius: var(--radius-sm);
+    padding: .75rem 1rem;
+    margin-bottom: 1.35rem;
+    font-size: .8rem; color: var(--muted); line-height: 1.55;
+  }
+  .info-badge i { color: var(--blue); flex-shrink: 0; margin-top: .05rem; }
+  .info-badge strong { color: var(--blue); }
+  .info-badge strong { color: var(--amber); }
+
+  /* ── DIVIDER ────────────────────────────────────── */
+  .divider-row {
+    display:flex; align-items:center; gap:.75rem; margin:1.25rem 0;
+  }
+  .divider-line { flex:1; height:1px; background:var(--border); }
+  .divider-text { font-size:.75rem; color:var(--muted); font-weight:500; white-space:nowrap; }
+
+  .login-footer {
+    text-align:center; font-size:.875rem; color:var(--muted); margin-top:1.25rem;
+  }
+  .login-footer a { color:var(--blue); font-weight:700; text-decoration:none; }
+  .login-footer a:hover { color:var(--blue-dk); text-decoration:underline; }
+
+  /* ── ASIDE ──────────────────────────────────────── */
+  .reg-aside {
+    background: var(--white);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2.25rem 2rem;
+    color: white;
+    position: sticky; top: 100px;
+    overflow: hidden;
+  }
+  .reg-aside::before {
+    content:''; position:absolute; inset:0;
+    background-image: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size: 22px 22px; pointer-events:none;
+  }
+  .aside-title { font-family:var(--font-h); font-size:1.35rem; font-weight:700; line-height:1.25; margin-bottom:.55rem; position:relative; }
+  .aside-sub   { font-size:.82rem; color:rgba(255,255,255,.6); line-height:1.75; margin-bottom:1.6rem; position:relative; }
+
+  .aside-step {
+    display:flex; align-items:flex-start; gap:.85rem;
+    margin-bottom:1.1rem; position:relative;
+  }
+  .aside-step:not(:last-child)::after {
+    content:'';
+    position:absolute; left:17px; top:36px; bottom:-14px;
+    width:1.5px;
+    background:repeating-linear-gradient(to bottom, rgba(255,255,255,.15) 0, rgba(255,255,255,.15) 5px, transparent 5px, transparent 10px);
+  }
+  .aside-step-num {
+    width:36px; height:36px; flex-shrink:0;
+    border-radius:9px;
+    background:rgba(255,255,255,.1);
+    border:1.5px solid rgba(255,255,255,.18);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-h); font-weight:700; font-size:.85rem; color:white;
+    position:relative; z-index:1;
+  }
+  .aside-step-title { font-weight:700; font-size:.85rem; color:white; margin-bottom:.2rem; }
+  .aside-step-desc  { font-size:.75rem; color:rgba(255,255,255,.5); line-height:1.6; }
+
+  .aside-note {
+    margin-top:1.5rem; padding-top:1.25rem;
+    border-top:1px solid rgba(255,255,255,.1);
+    font-size:.75rem; color:rgba(255,255,255,.4); line-height:1.65; position:relative;
+  }
+
+  /* ── RESPONSIVE ─────────────────────────────────── */
+  @media (max-width:575px) {
+    .reg-head, .reg-body { padding-left:1.25rem; padding-right:1.25rem; }
+    .reg-card { border-radius:var(--radius); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}{% endblock %}
+
+{% block hero %}
+<div class="register-section">
+  <div class="reg-blob rb-1"></div>
+  <div class="reg-blob rb-2"></div>
+
+  <div class="container position-relative" style="z-index:1; padding-top:1rem; padding-bottom:1rem;">
+    <div class="row align-items-start justify-content-center gy-5">
+
+      <!-- ── FORM CARD ──────────────────────────────── -->
+      <div class="col-12 col-md-10 col-lg-7 col-xl-7">
+        <div class="reg-card">
+
+          <!-- Header -->
+          <div class="reg-head">
+            <div class="reg-logo">
+              <div class="reg-logo-icon"><i class="bi bi-activity"></i></div>
+              <div>
+                <div class="reg-logo-name">OralScan AI</div>
+                <div class="reg-logo-sub">Cancer Detection System</div>
+              </div>
+            </div>
+            <h1 class="reg-title">Create your account</h1>
+            <p class="reg-sub">Fill in the form below. Your account will be reviewed and activated by an administrator before you can sign in.</p>
+          </div>
+
+          <!-- Body -->
+          <div class="reg-body">
+
+            <!-- Notice -->
+            <div class="info-badge">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <span>After registering, an <strong>admin must activate your account</strong> before you can log in. Please check back or contact support.</span>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'danger' }} d-flex align-items-center gap-2 mb-3" role="alert">
+                  <i class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
+                  <div>{{ message }}</div>
+                </div>
+              {% endfor %}
+            {% endif %}
+
+            <form method="POST" action="{% url 'user_register_action' %}" novalidate>
+              {% csrf_token %}
+
+              <!-- ── Personal Info ── -->
+              <div class="form-section-label"><i class="bi bi-person-badge" style="color:var(--blue);"></i>Personal Information</div>
+              <div class="row g-3">
+
+                <div class="col-md-6">
+                  <label class="field-label" for="r-name">Full Name</label>
+                  <div class="field-wrap">
+                    <i class="bi bi-person field-icon"></i>
+                    <input id="r-name" class="form-control" type="text" name="name" required placeholder="e.g. Ravi Kumar">
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="field-label" for="r-loginid">Login ID</label>
+                  <div class="field-wrap">
+                    <i class="bi bi-at field-icon"></i>
+                    <input id="r-loginid" class="form-control" type="text" name="loginid" required placeholder="Choose a unique ID">
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="field-label" for="r-password">Password</label>
+                  <div class="field-wrap">
+                    <i class="bi bi-lock field-icon"></i>
+                    <input id="r-password" class="form-control" type="password" name="password" required placeholder="Create a password" style="padding-right:2.75rem;">
+                    <button type="button" class="pwd-toggle" id="pwdToggle" aria-label="Toggle password">
+                      <i class="bi bi-eye" id="pwdIcon"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="field-label" for="r-mobile">Mobile Number</label>
+                  <div class="field-wrap">
+                    <i class="bi bi-phone field-icon"></i>
+                    <input id="r-mobile" class="form-control" type="tel" name="mobile" required placeholder="e.g. 9876543210">
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <label class="field-label" for="r-email">Email Address</label>
+                  <div class="field-wrap">
+                    <i class="bi bi-envelope field-icon"></i>
+                    <input id="r-email" class="form-control" type="email" name="email" required placeholder="you@example.com">
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- ── Address Info ── -->
+              <div class="form-section-label"><i class="bi bi-geo-alt" style="color:var(--green);"></i>Address Details</div>
+              <div class="row g-3">
+
+                <div class="col-md-6">
+                  <label class="field-label" for="r-locality">Locality / Area</label>
+                  <div class="field-wrap">
+                    <i class="bi bi-map field-icon"></i>
+                    <input id="r-locality" class="form-control" type="text" name="locality" placeholder="e.g. Banjara Hills">
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="field-label" for="r-city">City</label>
+                  <div class="field-wrap">
+                    <i class="bi bi-building field-icon"></i>
+                    <input id="r-city" class="form-control" type="text" name="city" placeholder="e.g. Hyderabad">
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <label class="field-label" for="r-address">Full Address</label>
+                  <div class="field-wrap">
+                    <i class="bi bi-house field-icon field-icon-top"></i>
+                    <textarea id="r-address" class="form-control" name="address" rows="2" placeholder="Street, building, landmark…"></textarea>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <label class="field-label" for="r-state">State</label>
+                  <div class="field-wrap">
+                    <i class="bi bi-flag field-icon"></i>
+                    <input id="r-state" class="form-control" type="text" name="state" placeholder="e.g. Telangana">
+                  </div>
+                </div>
+
+              </div>
+
+              <button type="submit" class="btn-register">
+                <i class="bi bi-person-check"></i>
+                Create My Account
+              </button>
+            </form>
+
+            <div class="divider-row">
+              <span class="divider-line"></span>
+              <span class="divider-text">Already have an account?</span>
+              <span class="divider-line"></span>
+            </div>
+
+            <a href="{% url 'user_login' %}" class="btn-outline-blue w-100 justify-content-center" style="height:44px; font-size:.88rem;">
+              <i class="bi bi-box-arrow-in-right"></i> Sign In Instead
+            </a>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ASIDE ──────────────────────────────────── -->
+      <div class="col-lg-4 col-xl-3 d-none d-lg-block">
+        <div class="reg-aside">
+          <h2 class="aside-title">How Registration Works</h2>
+          <p class="aside-sub">Getting started with OralScan AI takes just a few minutes.</p>
+
+          <div class="aside-step">
+            <div class="aside-step-num">1</div>
+            <div>
+              <div class="aside-step-title">Fill the Form</div>
+              <p class="aside-step-desc">Provide your personal and contact details. All fields marked required must be completed.</p>
+            </div>
+          </div>
+          <div class="aside-step">
+            <div class="aside-step-num">2</div>
+            <div>
+              <div class="aside-step-title">Admin Review</div>
+              <p class="aside-step-desc">Your registration is sent to an administrator who verifies and activates your account.</p>
+            </div>
+          </div>
+          <div class="aside-step">
+            <div class="aside-step-num">3</div>
+            <div>
+              <div class="aside-step-title">Sign In</div>
+              <p class="aside-step-desc">Once activated, use your Login ID and password to access the AI screening dashboard.</p>
+            </div>
+          </div>
+          <div class="aside-step">
+            <div class="aside-step-num">4</div>
+            <div>
+              <div class="aside-step-title">Upload &amp; Detect</div>
+              <p class="aside-step-desc">Upload an oral image and receive an instant AI-powered cancer screening report.</p>
+            </div>
+          </div>
+
+          <div class="aside-note">
+            <i class="bi bi-shield-check me-1" style="color:rgba(255,255,255,.3);"></i>
+            This platform is a <strong style="color:rgba(255,255,255,.55);">clinical decision-support tool</strong>. Always consult a qualified healthcare provider for diagnosis.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const toggle = document.getElementById('pwdToggle');
+  const input  = document.getElementById('r-password');
+  const icon   = document.getElementById('pwdIcon');
+  if (toggle) {
+    toggle.addEventListener('click', () => {
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+    });
+  }
+</script>
+{% endblock %}

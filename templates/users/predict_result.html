@@ -1,0 +1,405 @@
+{% extends 'users/user_base.html' %}
+
+{% block title %}Predict Image — OralScan AI{% endblock %}
+{% block breadcrumb %}Predict Image{% endblock %}
+{% block nav_predict %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── UPLOAD CARD ─────────────────────────────────── */
+  .upload-card {
+    background: var(--white);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+    animation: fadeUp .4s ease both;
+  }
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+  .upload-card::before {
+    content:''; display:block; height:3px;
+    background: linear-gradient(90deg, var(--blue), #60a5fa, var(--blue));
+    background-size:200% 100%;
+    animation: shimmer 2.5s linear infinite;
+  }
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+  .uc-header {
+    display:flex; align-items:center; gap:1rem;
+    padding:1.5rem 1.75rem 1.25rem;
+    border-bottom:1px solid var(--border);
+  }
+  .uc-icon {
+    width:48px; height:48px; flex-shrink:0;
+    background:var(--blue-pale); border-radius:13px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem; color:var(--blue);
+  }
+  .uc-title { font-family:var(--font-h); font-weight:700; font-size:1.2rem; color:var(--ink); margin-bottom:.1rem; }
+  .uc-sub   { font-size:.82rem; color:#334e68; }
+
+  .uc-body { padding:1.75rem; }
+
+  /* ── DROP ZONE ───────────────────────────────────── */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 2.25rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.03);
+    transition: border-color .2s, background .2s;
+    position: relative;
+    margin-bottom: 1.25rem;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--blue);
+    background: var(--blue-pale);
+  }
+  .drop-zone input[type="file"] {
+    position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+  }
+  .dz-icon {
+    width:56px; height:56px; border-radius:50%;
+    background:var(--white); border:1.5px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.4rem; color:var(--muted); margin:0 auto .9rem;
+    box-shadow:var(--sh-xs);
+    transition:border-color .2s, color .2s;
+  }
+  .drop-zone:hover .dz-icon, .drop-zone.drag-over .dz-icon { border-color:var(--blue); color:var(--blue); }
+  .dz-title { font-weight:700; color:var(--ink); font-size:.95rem; margin-bottom:.3rem; }
+  .dz-sub   { font-size:.8rem; color:var(--muted); }
+  .dz-sub span { color:var(--blue); font-weight:700; }
+
+  /* file preview name */
+  .file-chosen {
+    display:none; align-items:center; gap:.6rem;
+    background:var(--blue-pale); border:1px solid var(--blue-border);
+    border-radius:var(--radius-sm); padding:.55rem .9rem;
+    font-size:.82rem; font-weight:700; color:var(--blue);
+    margin-bottom:1.25rem;
+  }
+  .file-chosen.show { display:flex; }
+  .file-chosen i { font-size:1rem; }
+  .file-chosen-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* submit */
+  .btn-predict {
+    width:100%;
+    background:linear-gradient(135deg, var(--blue) 0%, var(--blue-dk) 100%);
+    color:white; border:none; border-radius:var(--radius-sm);
+    height:50px; font-family:var(--font-b); font-weight:800; font-size:.95rem;
+    display:flex; align-items:center; justify-content:center; gap:.5rem;
+    cursor:pointer;
+    transition:transform .15s, box-shadow .2s, opacity .2s;
+    box-shadow:0 4px 14px rgba(26,86,219,.3);
+  }
+  .btn-predict:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(26,86,219,.4); opacity:.95; }
+  .btn-predict:active { transform:translateY(0); }
+
+  /* ── RESULT CARD ─────────────────────────────────── */
+  .result-card {
+    background: var(--white);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: fadeUp .5s .1s ease both;
+  }
+
+  .rc-top-bar {
+    height: 4px;
+  }
+  .rc-top-bar.cancer     { background:linear-gradient(90deg, var(--red), #f87171); }
+  .rc-top-bar.noncancer  { background:linear-gradient(90deg, var(--green), #34d399); }
+  .rc-top-bar.invalid    { background:linear-gradient(90deg, #64748b, #94a3b8); }
+
+  .rc-header {
+    display:flex; align-items:center; gap:1rem;
+    padding:1.4rem 1.75rem 1.2rem;
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+  }
+  .rc-icon { width:44px; height:44px; flex-shrink:0; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:1.15rem; }
+  .rc-icon.cancer     { background:var(--red-pale);   color:var(--red); }
+  .rc-icon.noncancer  { background:var(--green-pale); color:var(--green); }
+  .rc-icon.invalid    { background:var(--surface2);   color:var(--muted); }
+
+  .rc-title { font-family:var(--font-h); font-weight:700; font-size:1.1rem; color:var(--ink); margin-bottom:.1rem; }
+  .rc-label-badge {
+    margin-left:auto; flex-shrink:0;
+    font-family:var(--font-h); font-size:1rem; font-weight:700;
+    padding:.4rem 1.1rem; border-radius:var(--radius-sm);
+  }
+  .rc-label-badge.cancer    { background:var(--red-pale);   color:var(--red);   border:1px solid #fecaca; }
+  .rc-label-badge.noncancer { background:var(--green-pale); color:var(--green); border:1px solid #bbf7d0; }
+  .rc-label-badge.invalid   { background:var(--surface2);   color:var(--muted); border:1px solid var(--border); }
+
+  .rc-body { padding:1.75rem; }
+
+  /* confidence bar */
+  .conf-row {
+    display:flex; align-items:center; gap:1rem; margin-bottom:1.4rem;
+  }
+  .conf-label { font-size:.8rem; font-weight:700; color:#334e68; white-space:nowrap; }
+  .conf-track { flex:1; background:var(--surface2); border-radius:999px; height:10px; overflow:hidden; }
+  .conf-fill {
+    height:100%; border-radius:999px;
+    animation:growBar .9s ease forwards; transform-origin:left;
+  }
+  @keyframes growBar{from{width:0%}}
+  .conf-fill.cancer    { background:linear-gradient(90deg, #f87171, #ef4444); }
+  .conf-fill.noncancer { background:linear-gradient(90deg, #34d399, #16a34a); }
+  .conf-fill.invalid   { background:linear-gradient(90deg, #94a3b8, #64748b); }
+  .conf-val { font-family:var(--font-h); font-size:1.05rem; font-weight:700; color:var(--ink); white-space:nowrap; }
+
+  /* verdict box */
+  .verdict-box {
+    display:flex; align-items:flex-start; gap:.75rem;
+    border-radius:var(--radius); padding:1rem 1.25rem;
+    margin-bottom:1.5rem;
+  }
+  .verdict-box.cancer    { background: var(--red-pale);   border: 1px solid rgba(248, 113, 113, 0.2); }
+  .verdict-box.noncancer { background: var(--green-pale); border: 1px solid rgba(74, 222, 128, 0.2); }
+  .verdict-box.invalid   { background: var(--surface2);   border: 1px solid var(--border); }
+
+  .verdict-icon { font-size:1.15rem; flex-shrink:0; margin-top:.05rem; }
+  .verdict-icon.cancer    { color:var(--red); }
+  .verdict-icon.noncancer { color:var(--green); }
+  .verdict-icon.invalid   { color:var(--muted); }
+
+  .verdict-title { font-weight:800; font-size:.95rem; margin-bottom:.2rem; }
+  .verdict-title.cancer    { color:#991b1b; }
+  .verdict-title.noncancer { color:#14532d; }
+  .verdict-title.invalid   { color:#334e68; }
+
+  .verdict-text { font-size:.82rem; line-height:1.65; }
+  .verdict-text.cancer    { color:#991b1b; }
+  .verdict-text.noncancer { color:#14532d; }
+  .verdict-text.invalid   { color:#334e68; }
+
+  /* uploaded image */
+  .result-image-wrap {
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.05);
+    text-align: center; padding: 1rem;
+  }
+  .result-image-wrap img {
+    max-width:100%; max-height:380px;
+    border-radius:var(--radius-sm);
+    box-shadow:var(--sh-sm);
+  }
+  .result-image-label {
+    font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+    color:var(--muted); margin-bottom:.75rem;
+    display:flex; align-items:center; gap:.4rem;
+  }
+
+  /* model info row */
+  .model-info-row {
+    display:flex; flex-wrap:wrap; gap:.75rem;
+    padding:1rem 1.25rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-top:1px solid var(--border);
+  }
+  .mi-chip {
+    background:var(--white); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:.3rem .85rem;
+    font-size:.78rem; font-weight:600; color:#334e68;
+  }
+  .mi-chip strong { color:var(--ink); }
+
+  /* disclaimer */
+  .predict-disclaimer {
+    background: var(--amber-pale); 
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    border-radius:var(--radius); padding:1rem 1.25rem;
+    display:flex; align-items:flex-start; gap:.65rem;
+    font-size:.8rem; color: var(--amber); line-height:1.65;
+    margin-top:1.75rem;
+  }
+  .predict-disclaimer i { color:var(--amber); flex-shrink:0; margin-top:.1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header reveal">
+  <h1 class="page-title">Predict Image</h1>
+  <p class="page-sub">Upload an oral image to receive an instant AI cancer screening result.</p>
+</div>
+
+<!-- Upload Card -->
+<div class="upload-card reveal">
+  <div class="uc-header">
+    <div class="uc-icon"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+    <div>
+      <div class="uc-title">Upload Oral Image</div>
+      <div class="uc-sub">Supported formats: JPG, JPEG, PNG &nbsp;·&nbsp; Max 10 MB &nbsp;·&nbsp; Auto-resized to 224 × 224 px</div>
+    </div>
+  </div>
+
+  <div class="uc-body">
+    <form method="POST" enctype="multipart/form-data" action="{% url 'predict_image' %}" id="predictForm">
+      {% csrf_token %}
+
+      <!-- Drop Zone -->
+      <div class="drop-zone" id="dropZone">
+        <input type="file" name="image" accept="image/*" required id="fileInput">
+        <div class="dz-icon"><i class="bi bi-image"></i></div>
+        <div class="dz-title">Drag &amp; drop an image here</div>
+        <p class="dz-sub">or <span>browse to upload</span></p>
+      </div>
+
+      <!-- File chosen indicator -->
+      <div class="file-chosen" id="fileChosen">
+        <i class="bi bi-file-earmark-image-fill"></i>
+        <span class="file-chosen-name" id="fileChosenName">No file</span>
+        <i class="bi bi-x-circle" style="cursor:pointer; flex-shrink:0;" id="clearFile"></i>
+      </div>
+
+      <button type="submit" class="btn-predict" id="submitBtn">
+        <i class="bi bi-search-heart"></i>
+        Analyse Image
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ── RESULT SECTION (only shown after prediction) ── -->
+{% if label %}
+
+  {% if label == "Cancer" %}
+    {% with color="cancer" icon="bi-exclamation-circle-fill" verdict_title="Cancer Detected" verdict_msg="The model detected indicators consistent with oral cancer. Please consult a qualified healthcare provider immediately for a professional evaluation." %}
+    {% endwith %}
+  {% elif label == "Non-Cancer" %}
+    {% with color="noncancer" icon="bi-check-circle-fill" verdict_title="No Cancer Detected" verdict_msg="No malignancy indicators were detected in this image. Regular check-ups and awareness of risk factors are still recommended." %}
+    {% endwith %}
+  {% else %}
+    {% with color="invalid" icon="bi-slash-circle-fill" verdict_title="Invalid Image" verdict_msg="The uploaded image does not appear to be a valid oral image. Please upload a clear photograph of the oral cavity." %}
+    {% endwith %}
+  {% endif %}
+
+  <div class="result-card reveal">
+    <div class="rc-top-bar {{ color }}"></div>
+
+    <div class="rc-header">
+      <div class="rc-icon {{ color }}">
+        <i class="bi {{ icon }}"></i>
+      </div>
+      <div>
+        <div class="rc-title">Prediction Result</div>
+        <div style="font-size:.82rem; color:#334e68;">MobileNet V2 · 224×224 px input</div>
+      </div>
+      <div class="rc-label-badge {{ color }}">{{ label }}</div>
+    </div>
+
+    <div class="rc-body">
+
+      <!-- Confidence bar -->
+      <div class="conf-row">
+        <span class="conf-label">Confidence Score</span>
+        <div class="conf-track">
+          <div class="conf-fill {{ color }}" style="width:{{ score }}%;"></div>
+        </div>
+        <span class="conf-val">{{ score }}%</span>
+      </div>
+
+      <!-- Verdict -->
+      <div class="verdict-box {{ color }}">
+        <i class="bi {{ icon }} verdict-icon {{ color }}"></i>
+        <div>
+          <div class="verdict-title {{ color }}">{{ verdict_title }}</div>
+          <p class="verdict-text {{ color }}">{{ verdict_msg }}</p>
+        </div>
+      </div>
+
+      <!-- Uploaded image -->
+      {% if image_path %}
+      <div class="result-image-label">
+        <i class="bi bi-image" style="color:var(--blue);"></i>
+        Uploaded Image
+      </div>
+      <div class="result-image-wrap">
+        <img src="/{{ image_path }}" alt="Uploaded Oral Image" />
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Model info footer -->
+    <div class="model-info-row">
+      <span class="mi-chip"><strong>Model:</strong> MobileNet V2</span>
+      <span class="mi-chip"><strong>Accuracy:</strong> 84.69%</span>
+      <span class="mi-chip"><strong>Input:</strong> 224 × 224 px</span>
+      <span class="mi-chip"><strong>Label:</strong> {{ label }}</span>
+      <span class="mi-chip"><strong>Score:</strong> {{ score }}%</span>
+    </div>
+  </div>
+
+  
+
+{% endif %}
+
+<!-- Disclaimer -->
+<div class="predict-disclaimer reveal">
+  <i class="bi bi-exclamation-triangle-fill"></i>
+  <div>
+    <strong>Medical Disclaimer:</strong> This AI tool is a decision-support aid only. Results must be reviewed and confirmed by a qualified healthcare provider. Do not make clinical or treatment decisions based solely on this output.
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const fileInput   = document.getElementById('fileInput');
+  const dropZone    = document.getElementById('dropZone');
+  const fileChosen  = document.getElementById('fileChosen');
+  const chosenName  = document.getElementById('fileChosenName');
+  const clearFile   = document.getElementById('clearFile');
+  const submitBtn   = document.getElementById('submitBtn');
+
+  function showFile(name) {
+    chosenName.textContent = name;
+    fileChosen.classList.add('show');
+  }
+  function clearSelection() {
+    fileInput.value = '';
+    fileChosen.classList.remove('show');
+  }
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) showFile(fileInput.files[0].name);
+    else clearSelection();
+  });
+  clearFile.addEventListener('click', clearSelection);
+
+  // Drag over styling
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) {
+      fileInput.files = e.dataTransfer.files;
+      showFile(e.dataTransfer.files[0].name);
+    }
+  });
+
+  // Loading state on submit
+  const form = document.getElementById('predictForm');
+  form.addEventListener('submit', () => {
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Analysing…';
+    submitBtn.disabled = true;
+  });
+</script>
+{% endblock %}

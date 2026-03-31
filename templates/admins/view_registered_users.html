@@ -1,0 +1,333 @@
+{% extends 'admins/admin_base.html' %}
+{% load static %}
+
+{% block title %}Registered Users — OralScan AI Admin{% endblock %}
+{% block breadcrumb %}Registered Users{% endblock %}
+{% block nav_users %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── TOOLBAR ──────────────────────────────────────── */
+  .table-toolbar {
+    display:flex; align-items:center; gap:.75rem;
+    flex-wrap:wrap; margin-bottom:1.25rem;
+  }
+  .user-count-badge {
+    display:inline-flex; align-items:center; gap:.4rem;
+    background:var(--blue-pale); border:1px solid var(--blue-border);
+    color:var(--blue); font-size:.75rem; font-weight:700;
+    padding:.28rem .85rem; border-radius:999px;
+  }
+  .search-wrap {
+    position:relative; flex:1; min-width:180px; max-width:280px;
+    margin-left:auto;
+  }
+  .search-wrap i {
+    position:absolute; left:.8rem; top:50%; transform:translateY(-50%);
+    color:var(--muted); font-size:.85rem; pointer-events:none;
+  }
+  .search-wrap input {
+    width:100%; padding:.5rem .85rem .5rem 2.2rem;
+    border:1.5px solid var(--border); border-radius:var(--radius-sm);
+    font-family:var(--font-b); font-size:.85rem;
+    background:rgba(255, 255, 255, 0.05); color:var(--text);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .search-wrap input:focus {
+    border-color:var(--blue);
+    box-shadow:0 0 0 3px rgba(59, 130, 246, 0.15);
+    outline:none;
+  }
+
+  /* ── TABLE CARD ──────────────────────────────────── */
+  .table-card {
+    background: var(--white);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .table-card .table { margin:0; }
+
+  /* header */
+  .table-card thead th {
+    background: rgba(15, 23, 42, 0.9);
+    color: rgba(255,255,255,.75);
+    font-size: .72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em;
+    padding: .85rem 1rem;
+    border: none; white-space: nowrap;
+  }
+  .table-card thead th:first-child { border-radius:0; }
+
+  /* rows */
+  .table-card tbody td {
+    padding:.9rem 1rem;
+    vertical-align:middle;
+    border-color:var(--border);
+    font-size:.875rem; color:var(--text);
+  }
+  .table-card tbody tr {
+    transition:background .15s;
+  }
+  .table-card tbody tr:hover { background:var(--blue-pale); }
+
+  /* serial */
+  .sno {
+    font-family:var(--font-h); font-weight:700;
+    color:var(--muted); font-size:.85rem;
+  }
+
+  /* name chip */
+  .user-chip {
+    display:flex; align-items:center; gap:.7rem;
+  }
+  .user-avatar {
+    width:34px; height:34px; flex-shrink:0;
+    border-radius:50%;
+    background:linear-gradient(135deg, var(--blue), var(--ink-mid));
+    display:flex; align-items:center; justify-content:center;
+    color:white; font-size:.78rem; font-weight:800;
+  }
+  .user-name  { font-weight:700; color:var(--ink); font-size:.875rem; }
+  .user-email { font-size:.75rem; color:var(--muted); }
+
+  /* login id */
+  .login-id-pill {
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:6px; padding:.22rem .6rem;
+    font-size:.78rem; font-weight:700; color:#334e68;
+    font-family:monospace;
+  }
+
+  /* mobile badge */
+  .mobile-text { font-size:.83rem; color:#334e68; }
+
+  /* status badges */
+  .badge-pending {
+    display:inline-flex; align-items:center; gap:.35rem;
+    background:var(--amber-pale); color:#92400e;
+    border:1px solid #fde68a;
+    font-size:.72rem; font-weight:700;
+    padding:.28rem .75rem; border-radius:999px;
+    white-space:nowrap;
+  }
+  .badge-pending-dot {
+    width:6px; height:6px; border-radius:50%; background:var(--amber);
+    animation:blink 1.8s ease-in-out infinite;
+  }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+  .badge-active {
+    display:inline-flex; align-items:center; gap:.35rem;
+    background:var(--green-pale); color:#14532d;
+    border:1px solid #bbf7d0;
+    font-size:.72rem; font-weight:700;
+    padding:.28rem .75rem; border-radius:999px;
+    white-space:nowrap;
+  }
+
+  /* action button */
+  .btn-activate {
+    display:inline-flex; align-items:center; gap:.35rem;
+    background:var(--blue); color:white;
+    border:none; border-radius:var(--radius-sm);
+    font-family:var(--font-b); font-weight:700; font-size:.78rem;
+    padding:.38rem 1rem; cursor:pointer;
+    text-decoration:none;
+    transition:background .18s, transform .15s, box-shadow .18s;
+    white-space:nowrap;
+  }
+  .btn-activate:hover {
+    background:var(--blue-dk); color:white;
+    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(26,86,219,.3);
+  }
+  .activated-label {
+    display:inline-flex; align-items:center; gap:.35rem;
+    color:var(--green); font-weight:700; font-size:.82rem;
+  }
+
+  /* ── EMPTY STATE ──────────────────────────────────── */
+  .empty-state {
+    text-align:center; padding:4rem 2rem;
+    color:var(--muted);
+  }
+  .empty-icon {
+    width:70px; height:70px; border-radius:50%;
+    background:var(--surface2); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.75rem; margin:0 auto 1.1rem;
+    color:var(--muted);
+  }
+  .empty-title { font-family:var(--font-h); font-size:1.15rem; font-weight:700; color:var(--ink); margin-bottom:.35rem; }
+  .empty-sub   { font-size:.875rem; color:#334e68; }
+
+  /* ── FOOTER ROW ──────────────────────────────────── */
+  .table-footer {
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:.75rem;
+    padding:1rem 1.25rem;
+    border-top:1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+    font-size:.8rem; color: var(--muted);
+  }
+  .total-chip {
+    display:inline-flex; align-items:center; gap:.4rem;
+    background:var(--white); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:.3rem .85rem;
+    font-weight:700; color:var(--ink);
+  }
+
+  /* responsive table */
+  @media (max-width:767px) {
+    .table-card thead th:nth-child(3),
+    .table-card tbody td:nth-child(3) { display:none; } /* hide mobile col on xs */
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header reveal">
+  <h1 class="page-title">Registered Users</h1>
+  <p class="page-sub">Review, activate, and manage all user accounts on the OralScan AI platform.</p>
+</div>
+
+<!-- Toolbar -->
+<div class="table-toolbar reveal">
+  {% if data %}
+    <span class="user-count-badge">
+      <i class="bi bi-people-fill"></i>
+      {{ data|length }} User{{ data|length|pluralize }} Registered
+    </span>
+  {% endif %}
+
+  <div class="search-wrap ms-auto">
+    <i class="bi bi-search"></i>
+    <input type="text" id="userSearch" placeholder="Search by name, ID, email…" autocomplete="off">
+  </div>
+</div>
+
+<!-- Table Card -->
+<div class="table-card reveal">
+  <div class="table-responsive">
+    <table class="table table-borderless" id="usersTable">
+      <thead>
+        <tr>
+          <th style="width:50px;">#</th>
+          <th>User</th>
+          <th>Login ID</th>
+          <th class="d-none d-md-table-cell">Mobile</th>
+          <th>Status</th>
+          <th style="text-align:center;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in data %}
+        <tr>
+          <!-- Serial -->
+          <td><span class="sno">{{ forloop.counter }}</span></td>
+
+          <!-- Name + Email chip -->
+          <td>
+            <div class="user-chip">
+              <div class="user-avatar">
+                {{ user.name|first|upper }}
+              </div>
+              <div>
+                <div class="user-name">{{ user.name }}</div>
+                <div class="user-email">{{ user.email }}</div>
+              </div>
+            </div>
+          </td>
+
+          <!-- Login ID -->
+          <td><span class="login-id-pill">{{ user.loginid }}</span></td>
+
+          <!-- Mobile -->
+          <td class="d-none d-md-table-cell">
+            <span class="mobile-text"><i class="bi bi-phone me-1" style="color:var(--muted);"></i>{{ user.mobile }}</span>
+          </td>
+
+          <!-- Status -->
+          <td>
+            {% if user.status == 'waiting' %}
+              <span class="badge-pending">
+                <span class="badge-pending-dot"></span>
+                Pending
+              </span>
+            {% else %}
+              <span class="badge-active">
+                <i class="bi bi-check-circle-fill" style="font-size:.7rem;"></i>
+                Activated
+              </span>
+            {% endif %}
+          </td>
+
+          <!-- Action -->
+          <td style="text-align:center;">
+            {% if user.status == 'waiting' %}
+              <a href="/AdminActivaUsers/?uid={{ user.id }}" class="btn-activate">
+                <i class="bi bi-person-check"></i>
+                Activate
+              </a>
+            {% else %}
+              <span class="activated-label">
+                <i class="bi bi-check-circle-fill"></i>
+                Active
+              </span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <!-- Empty state — spans full table -->
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <div class="empty-icon"><i class="bi bi-people"></i></div>
+              <div class="empty-title">No users registered yet</div>
+              <p class="empty-sub">Once users create accounts they will appear here for review and activation.</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if data %}
+  <div class="table-footer">
+    <span>Showing <strong>{{ data|length }}</strong> record{{ data|length|pluralize }}</span>
+    <span class="total-chip">
+      <i class="bi bi-people" style="color:var(--blue);"></i>
+      Total: {{ data|length }}
+    </span>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Live search
+  const searchInput = document.getElementById('userSearch');
+  const tableBody   = document.querySelector('#usersTable tbody');
+
+  if (searchInput && tableBody) {
+    searchInput.addEventListener('input', function () {
+      const q = this.value.toLowerCase();
+      Array.from(tableBody.querySelectorAll('tr')).forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
+      });
+    });
+  }
+</script>
+{% endblock %}

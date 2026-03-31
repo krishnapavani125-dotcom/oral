@@ -1,0 +1,910 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block home %}active{% endblock %}
+{% block title %}OralScan AI — Early Oral Cancer Detection{% endblock %}
+
+{% block extra_css %}
+<style>
+
+  /* ══ HERO ════════════════════════════════════════════ */
+  .hero-wrap {
+    background: transparent;
+    padding: 7.5rem 0 5.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-wrap::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+  }
+
+  .hero-blob {
+    position: absolute; border-radius: 50%; pointer-events: none;
+    filter: blur(80px);
+  }
+  .blob-1 {
+    width: 600px; height: 600px;
+    background: rgba(37, 99, 235, 0.2);
+    top: -200px; right: -150px;
+  }
+  .blob-2 {
+    width: 450px; height: 450px;
+    background: rgba(220, 38, 38, 0.08);
+    bottom: -150px; left: -100px;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: .45rem;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.15);
+    color: rgba(255,255,255,.85);
+    font-size: .7rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    padding: .3rem .9rem; border-radius: 999px;
+    margin-bottom: 1.1rem;
+  }
+  .hero-badge .hb-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 6px #4ade80;
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .hero-title {
+    font-family: var(--font-h);
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: 700;
+    color: white;
+    line-height: 1.12;
+    letter-spacing: -.025em;
+    margin-bottom: 1.1rem;
+  }
+  .hero-title em {
+    font-style: normal;
+    color: #93c5fd;
+  }
+
+  .hero-desc {
+    color: rgba(255,255,255,.6);
+    font-size: 1rem;
+    line-height: 1.8;
+    max-width: 480px;
+    margin-bottom: 2rem;
+  }
+
+  .hero-actions { display: flex; gap: .85rem; flex-wrap: wrap; }
+
+  .btn-hero-primary {
+    background: rgb(106, 67, 158); color: var(--ink);
+    font-weight: 800; font-size: .9rem;
+    border: none; border-radius: var(--radius-sm);
+    padding: .75rem 1.75rem;
+    display: inline-flex; align-items: center; gap: .45rem;
+    text-decoration: none; cursor: pointer;
+    transition: background .2s, transform .15s, box-shadow .2s;
+  }
+  .btn-hero-primary:hover {
+    background: #e0eaff; color: var(--blue);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  }
+
+  .btn-hero-ghost {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255,255,255,.22);
+    color: rgba(255,255,255,.85);
+    font-weight: 700; font-size: .9rem;
+    border-radius: var(--radius-sm);
+    padding: .73rem 1.6rem;
+    display: inline-flex; align-items: center; gap: .45rem;
+    text-decoration: none; cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-hero-ghost:hover {
+    background: rgba(255,255,255,.15);
+    color: white; transform: translateY(-2px);
+  }
+
+  .hero-panel {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    backdrop-filter: blur(10px);
+  }
+
+  .panel-label {
+    font-size: .68rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: rgba(255,255,255,.3);
+    margin-bottom: 1.1rem;
+    display: flex; align-items: center; gap: .4rem;
+  }
+
+  .dataset-ring-wrap {
+    display: flex; align-items: center; gap: 1.25rem;
+    margin-bottom: 1.4rem;
+  }
+  .ring-svg { flex-shrink: 0; }
+  .ring-track { fill: none; stroke: rgba(255,255,255,.08); stroke-width: 10; }
+  .ring-cancer {
+    fill: none; stroke: #f87171; stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 164 326;
+    stroke-dashoffset: 81;
+    transform: rotate(-90deg); transform-origin: 60px 60px;
+  }
+  .ring-noncancer {
+    fill: none; stroke: #34d399; stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 147 326;
+    stroke-dashoffset: -83;
+    transform: rotate(-90deg); transform-origin: 60px 60px;
+  }
+  .ring-center-text {
+    font-family: var(--font-h); font-size: 1.4rem; font-weight: 700;
+    fill: white; text-anchor: middle; dominant-baseline: central;
+  }
+  .ring-center-sub { font-size: .55rem; fill: rgba(255,255,255,.4); text-anchor: middle; }
+
+  .ring-legend { flex: 1; }
+  .legend-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: .6rem; }
+  .legend-row:last-child { margin-bottom: 0; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .legend-name { font-size: .78rem; color: rgba(255,255,255,.6); margin-left: .45rem; flex: 1; }
+  .legend-count { font-family: var(--font-h); font-weight: 700; font-size: .95rem; color: white; }
+  .legend-pct { font-size: .7rem; color: rgba(255,255,255,.35); margin-left: .35rem; }
+
+  .acc-row { margin-bottom: .9rem; }
+  .acc-row:last-child { margin-bottom: 0; }
+  .acc-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: .35rem; }
+  .acc-name { font-size: .78rem; font-weight: 600; color: rgba(255,255,255,.7); }
+  .acc-val { font-family: var(--font-h); font-size: .95rem; font-weight: 700; color: white; }
+  .acc-track {
+    background: rgba(255,255,255,.08);
+    border-radius: 999px; height: 7px; overflow: hidden;
+  }
+  .acc-fill {
+    height: 100%; border-radius: 999px;
+    animation: growBar .9s ease forwards;
+    transform-origin: left;
+  }
+  @keyframes growBar { from{width:0%} }
+  .acc-blue  { background: linear-gradient(90deg, #60a5fa, #3b82f6); }
+  .acc-indigo{ background: linear-gradient(90deg, #a78bfa, #7c3aed); }
+
+  /* ══ STATS RIBBON ════════════════════════════════════ */
+  .stats-ribbon {
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 1.6rem 0;
+  }
+  .stat-cell { text-align: center; padding: 0 1rem; }
+  .stat-num {
+    font-family: var(--font-h);
+    font-size: 1.9rem; font-weight: 700;
+    color: var(--ink); line-height: 1;
+    margin-bottom: .2rem;
+  }
+  .stat-num .accent { color: var(--blue); }
+  .stat-lbl {
+    font-size: .75rem; font-weight: 600;
+    color: #334e68; text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  .stat-sep {
+    width: 1px; background: var(--border);
+    align-self: stretch; margin: .25rem 0;
+  }
+
+  /* ══ FEATURES ════════════════════════════════════════ */
+  .feat-card {
+    background: var(--white);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    height: 100%;
+    position: relative; overflow: hidden;
+    transition: box-shadow .25s, transform .25s, border-color .25s;
+  }
+  .feat-card::after {
+    content:''; position:absolute;
+    top:0; left:0; right:0; height:3px;
+    background: linear-gradient(90deg, var(--blue), #60a5fa);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform .3s ease;
+  }
+  .feat-card:hover { box-shadow: var(--sh-md); transform: translateY(-4px); }
+  .feat-card:hover::after { transform: scaleX(1); }
+
+  .feat-title {
+    font-family: var(--font-b); font-weight: 700;
+    font-size: 1rem; color: var(--ink); margin: 1rem 0 .5rem;
+  }
+  /* FIX: was #2d4a62 which can appear light on white bg — bumped to darker navy */
+  .feat-desc { font-size: .875rem; color: var(--muted); line-height: 1.7; }
+
+  /* ══ DATASET SECTION ════════════════════════════════ */
+  .dataset-section {
+    background: transparent;
+    padding: 4.5rem 0;
+  }
+
+  .ds-card {
+    background: var(--white);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem 1.75rem;
+    display: flex; align-items: center; gap: 1.25rem;
+    transition: box-shadow .2s, transform .2s, border-color .2s;
+  }
+  .ds-card:hover { box-shadow: var(--sh-sm); transform: translateY(-2px); }
+
+  .ds-icon {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; flex-shrink: 0;
+  }
+
+  .ds-num {
+    font-family: var(--font-h); font-size: 1.6rem;
+    font-weight: 700; color: var(--ink); line-height: 1;
+  }
+  /* FIX: was #334e68 — slightly light on pure white */
+  .ds-label { font-size: .8rem; color: var(--muted); margin-top: .2rem; font-weight: 500; }
+
+  .ds-progress { margin-top: 1rem; }
+  .ds-prog-row { display: flex; align-items: center; gap: .75rem; margin-bottom: .5rem; }
+  /* FIX: was #2d4a62 */
+  .ds-prog-label { font-size: .78rem; font-weight: 600; color: var(--muted); width: 90px; flex-shrink: 0; }
+  .ds-prog-track { flex: 1; background: var(--surface2); border-radius: 999px; height: 8px; overflow: hidden; }
+  .ds-prog-fill { height: 100%; border-radius: 999px; animation: growBar .9s ease forwards; }
+  .ds-prog-val { font-size: .78rem; font-weight: 700; color: var(--ink); width: 36px; text-align: right; }
+
+  /* ══ HOW IT WORKS ════════════════════════════════════ */
+  .steps-section { padding: 4.5rem 0; }
+
+  .step-item {
+    display: flex; gap: 1.1rem; align-items: flex-start;
+    margin-bottom: 2rem; position: relative;
+  }
+  .step-item:last-child { margin-bottom: 0; }
+  .step-item:not(:last-child)::after {
+    content: '';
+    position: absolute; left: 21px; top: 48px; bottom: -32px;
+    width: 1.5px;
+    background: repeating-linear-gradient(to bottom, var(--border) 0, var(--border) 6px, transparent 6px, transparent 12px);
+  }
+
+  .step-num-box {
+    width: 44px; height: 44px; flex-shrink: 0;
+    border-radius: 12px;
+    background: var(--blue-pale);
+    border: 2px solid var(--blue-border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-h); font-weight: 700;
+    font-size: .95rem; color: var(--blue);
+    position: relative; z-index: 1;
+  }
+  .step-title { font-weight: 700; font-size: 1rem; color: var(--ink); margin-bottom: .3rem; }
+  /* FIX: was #2d4a62 */
+  .step-desc { font-size: .875rem; color: var(--muted); line-height: 1.7; }
+
+  .result-demo {
+    background: var(--white);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    box-shadow: var(--sh-md);
+  }
+  .rd-header {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .rd-title { font-weight: 700; font-size: .95rem; color: var(--ink); }
+  .rd-badge {
+    display: inline-flex; align-items: center; gap: .35rem;
+    background: var(--green-pale); color: var(--green);
+    font-size: .72rem; font-weight: 700;
+    padding: .25rem .7rem; border-radius: 999px;
+  }
+  .rd-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+  .class-row {
+    display: flex; align-items: center; gap: .75rem;
+    margin-bottom: .85rem;
+  }
+  .class-row:last-child { margin-bottom: 0; }
+  /* FIX: was #2d4a62 */
+  .class-name { font-size: .82rem; font-weight: 600; color: var(--muted); width: 90px; flex-shrink: 0; }
+  .class-track {
+    flex: 1; background: var(--surface2);
+    border-radius: 999px; height: 8px; overflow: hidden;
+  }
+  .class-fill { height: 100%; border-radius: 999px; animation: growBar 1s ease forwards; }
+  .fill-red   { background: linear-gradient(90deg, #f87171, #ef4444); }
+  .fill-green { background: linear-gradient(90deg, #34d399, #10b981); }
+  .fill-slate { background: linear-gradient(90deg, #94a3b8, #64748b); }
+  .class-val { font-family: var(--font-h); font-size: .9rem; font-weight: 700; color: var(--ink); width: 38px; text-align: right; }
+
+  .result-verdict {
+    margin-top: 1.25rem; padding: .85rem 1rem;
+    background: var(--green-pale);
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .verdict-icon { font-size: 1.1rem; color: var(--green); }
+  .verdict-text { font-size: .85rem; font-weight: 700; color: var(--green); }
+  /* FIX: was #166534 — already good, kept */
+  .verdict-sub  { font-size: .75rem; color: #166534; margin-top: .1rem; }
+
+  /* ── Model details box inside result-demo ── */
+  /* FIX: was #334e68 */
+  .model-details-label { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--blue); margin-bottom: .6rem; }
+  .model-details-item  { font-size: .8rem; color: var(--text); }
+
+  /* ══ RISK SECTION ════════════════════════════════════ */
+  .risk-section { padding: 4.5rem 0; background: var(--surface2); border-top: 1px solid var(--border); }
+
+  .risk-card {
+    background: var(--white);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.35rem 1.5rem;
+    display: flex; align-items: flex-start; gap: .9rem;
+    box-shadow: var(--sh-xs);
+    transition: box-shadow .2s, transform .2s;
+  }
+  .risk-card:hover { box-shadow: var(--sh-sm); transform: translateY(-2px); }
+  .risk-emoji { font-size: 1.5rem; line-height: 1; flex-shrink: 0; margin-top: .1rem; }
+  .risk-title { font-weight: 700; font-size: .92rem; color: blue; margin-bottom: .25rem; }
+  /* FIX: was #2d4a62 */
+  .risk-desc  { font-size: .82rem; color: var(--muted); line-height: 1.65; margin: 0; }
+
+  /* ══ CTA BANNER ══════════════════════════════════════ */
+  .cta-banner {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--ink-mid) 100%);
+    border-radius: var(--radius-lg);
+    padding: 3.5rem 2.5rem;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .cta-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .cta-banner .cta-title {
+    font-family: var(--font-h);
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    font-weight: 700; color: white;
+    line-height: 1.2; margin-bottom: .75rem;
+    position: relative;
+  }
+  .cta-banner .cta-sub {
+    color: rgba(255,255,255,.8); font-size: .96rem;
+    max-width: 480px; margin: 0 auto 2rem;
+    line-height: 1.75; position: relative;
+  }
+  .cta-actions { display: flex; gap: .85rem; justify-content: center; flex-wrap: wrap; position: relative; }
+
+  /* disclaimer */
+  .disclaimer-box {
+    background: rgba(251, 191, 36, 0.05);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--amber-pale);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    display: flex; align-items: flex-start; gap: .85rem;
+    margin-top: 2.5rem;
+  }
+  .disclaimer-icon { color: var(--amber); font-size: 1.2rem; flex-shrink: 0; margin-top: .05rem; }
+  .disclaimer-title { font-weight: 700; color: var(--amber); font-size: .9rem; margin-bottom: .25rem; }
+  /* FIX: was #78350f — already high contrast, kept */
+  .disclaimer-text  { font-size: .83rem; color: var(--muted); line-height: 1.65; margin: 0; }
+
+  /* ══ SECTION SUB TEXT FIX ════════════════════════════ */
+  /* The .section-sub and other descriptive text in white-background sections */
+  /* FIX: override --muted (#64748b) with darker value in content areas */
+  .section-wrap .section-sub,
+  .steps-section .section-sub,
+  .dataset-section .section-sub {
+    color: var(--muted);
+  }
+
+</style>
+{% endblock %}
+
+{% block hero %}
+<!-- ═════════════════ HERO ═══════════════════════════════ -->
+<section class="hero-wrap">
+  <div class="hero-blob blob-1"></div>
+  <div class="hero-blob blob-2"></div>
+
+  <div class="container position-relative">
+    <div class="row align-items-center gy-5">
+
+      <!-- Left -->
+      <div class="col-lg-6">
+        <div class="hero-badge">
+          <span class="hb-dot"></span>
+          AI-Powered Cancer Screening
+        </div>
+        <h1 class="hero-title">
+          Detect Oral Cancer<br><em>Early &amp; Accurately</em>
+        </h1>
+        <p class="hero-desc">
+          Upload an oral image and receive an instant AI screening report. Trained on <strong style="color:rgba(255,255,255,.9);">950 real images</strong> across cancer and non-cancer classes, our MobileNet model delivers <strong style="color:rgba(255,255,255,.9);">84.69% accuracy</strong> to assist clinicians.
+        </p>
+        <div class="hero-actions">
+          <a href="{% url 'register' %}" class="btn-hero-primary">
+            Start Free Screening <i class="bi bi-arrow-right"></i>
+          </a>
+          <a href="{% url 'user_login' %}" class="btn-hero-ghost">
+            <i class="bi bi-person"></i> Sign In
+          </a>
+        </div>
+      </div>
+
+      <!-- Right panel -->
+      <div class="col-lg-5 offset-lg-1">
+        <div class="hero-panel">
+
+          <div class="panel-label">
+            <i class="bi bi-database"></i> Training Dataset Overview
+          </div>
+          <div class="dataset-ring-wrap">
+            <svg class="ring-svg" width="120" height="120" viewBox="0 0 120 120">
+              <circle class="ring-track" cx="60" cy="60" r="52"/>
+              <circle class="ring-cancer" cx="60" cy="60" r="52"/>
+              <circle class="ring-noncancer" cx="60" cy="60" r="52"/>
+              <text class="ring-center-text" x="60" y="56">950</text>
+              <text class="ring-center-sub" x="60" y="70">images</text>
+            </svg>
+            <div class="ring-legend">
+              <div class="legend-row">
+                <span class="legend-dot" style="background:#f87171;"></span>
+                <span class="legend-name">Cancer</span>
+                <span class="legend-count">500</span>
+                <span class="legend-pct">52.6%</span>
+              </div>
+              <div class="legend-row">
+                <span class="legend-dot" style="background:#34d399;"></span>
+                <span class="legend-name">Non-Cancer</span>
+                <span class="legend-count">450</span>
+                <span class="legend-pct">47.4%</span>
+              </div>
+              <div class="legend-row" style="margin-top:.5rem; padding-top:.5rem; border-top:1px solid rgba(255,255,255,.1);">
+                <span class="legend-dot" style="background:rgba(255,255,255,.3);"></span>
+                <span class="legend-name">Total</span>
+                <span class="legend-count">950</span>
+                <span class="legend-pct">100%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-label" style="margin-top:.25rem;">
+            <i class="bi bi-cpu"></i> Model Accuracy
+          </div>
+          <div class="acc-row">
+            <div class="acc-meta">
+              <span class="acc-name">MobileNet (Final)</span>
+              <span class="acc-val">84.69%</span>
+            </div>
+            <div class="acc-track">
+              <div class="acc-fill acc-blue" style="width:84.69%;"></div>
+            </div>
+          </div>
+          <div class="acc-row">
+            <div class="acc-meta">
+              <span class="acc-name">CNN Baseline</span>
+              <span class="acc-val">79.08%</span>
+            </div>
+            <div class="acc-track">
+              <div class="acc-fill acc-indigo" style="width:79.08%;"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════ STATS RIBBON ═══════════════════════ -->
+<div class="stats-ribbon">
+  <div class="container">
+    <div class="row justify-content-center align-items-stretch gy-3">
+      <div class="col-6 col-sm-3">
+        <div class="stat-cell">
+          <div class="stat-num">950</div>
+          <div class="stat-lbl">Training Images</div>
+        </div>
+      </div>
+      <div class="col-auto d-none d-sm-flex"><div class="stat-sep"></div></div>
+      <div class="col-6 col-sm-3">
+        <div class="stat-cell">
+          <div class="stat-num">84<span class="accent">.69%</span></div>
+          <div class="stat-lbl">MobileNet Accuracy</div>
+        </div>
+      </div>
+      <div class="col-auto d-none d-sm-flex"><div class="stat-sep"></div></div>
+      <div class="col-6 col-sm-3">
+        <div class="stat-cell">
+          <div class="stat-num">2</div>
+          <div class="stat-lbl">Primary Classes</div>
+        </div>
+      </div>
+      <div class="col-auto d-none d-sm-flex"><div class="stat-sep"></div></div>
+      <div class="col-6 col-sm-3">
+        <div class="stat-cell">
+          <div class="stat-num">&lt;<span class="accent">2s</span></div>
+          <div class="stat-lbl">Prediction Time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- ═════════════════ FEATURES ════════════════════════════ -->
+<div class="mb-5 text-center reveal">
+  <span class="eyebrow"><span class="dot"></span> Platform Features</span>
+  <h2 class="section-title">Everything You Need for Oral Cancer Screening</h2>
+  <p class="section-sub mx-auto" style="color:#334e68;">A complete pipeline — from secure registration to AI-powered diagnosis — built for clinical and research use.</p>
+</div>
+
+<div class="row g-4 mb-5">
+  <div class="col-md-6 col-lg-4 reveal">
+    <div class="feat-card">
+      <div class="chip chip-blue"><i class="bi bi-shield-check"></i></div>
+      <div class="feat-title">Secure User Authentication</div>
+      <p class="feat-desc">Role-based login for users and admins. Accounts require admin activation before access, ensuring system integrity and controlled access.</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-4 reveal">
+    <div class="feat-card">
+      <div class="chip chip-blue"><i class="bi bi-lightning-charge"></i></div>
+      <div class="feat-title">Instant AI Prediction</div>
+      <p class="feat-desc">Upload a photo and get a three-class classification — Cancer, Non-Cancer, or Invalid — with confidence scores in under 2 seconds.</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-4 reveal">
+    <div class="feat-card">
+      <div class="chip chip-blue"><i class="bi bi-bar-chart-line"></i></div>
+      <div class="feat-title">Model Performance Reports</div>
+      <p class="feat-desc">View training accuracy graphs and confusion matrices for both CNN and MobileNet models, giving complete transparency into how the AI performs.</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-4 reveal">
+    <div class="feat-card">
+      <div class="chip chip-amber"><i class="bi bi-people"></i></div>
+      <div class="feat-title">Admin Control Panel</div>
+      <p class="feat-desc">Manage all registered users, review account details, and activate or deactivate accounts from a dedicated, secure admin dashboard.</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-4 reveal">
+    <div class="feat-card">
+      <div class="chip chip-green"><i class="bi bi-image"></i></div>
+      <div class="feat-title">Image Upload &amp; Analysis</div>
+      <p class="feat-desc">Upload any oral region image. The system preprocesses it to 224×224 px, normalises pixel values, and feeds it directly to the MobileNet model.</p>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-4 reveal">
+    <div class="feat-card">
+      <div class="chip chip-red"><i class="bi bi-phone"></i></div>
+      <div class="feat-title">Fully Responsive Design</div>
+      <p class="feat-desc">Optimised for desktops, tablets, and mobile. Bootstrap 5's mobile-first grid ensures a seamless experience across all screen sizes.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════════ DATASET SECTION ════════════════════ -->
+<section class="dataset-section" style="margin:0 calc(-50vw + 50%); padding-left:calc(50vw - 50%); padding-right:calc(50vw - 50%);">
+  <div class="container">
+    <div class="row align-items-center gy-5">
+      <div class="col-lg-5 reveal">
+        <span class="eyebrow"><span class="dot"></span> Dataset</span>
+        <h2 class="section-title">Trained on 950 Real Oral Images</h2>
+        <p class="section-sub" style="color:#334e68;">
+          The model was trained on a curated dataset of <strong style="color:var(--ink);">950 images</strong> from two classes collected for oral cancer research. The balanced class distribution helps reduce prediction bias.
+        </p>
+        <div class="ds-progress mt-4">
+          <div class="ds-prog-row">
+            <span class="ds-prog-label">Cancer</span>
+            <div class="ds-prog-track">
+              <div class="ds-prog-fill" style="width:52.6%; background:linear-gradient(90deg,#f87171,#ef4444);"></div>
+            </div>
+            <span class="ds-prog-val">500</span>
+          </div>
+          <div class="ds-prog-row">
+            <span class="ds-prog-label">Non-Cancer</span>
+            <div class="ds-prog-track">
+              <div class="ds-prog-fill" style="width:47.4%; background:linear-gradient(90deg,#34d399,#10b981);"></div>
+            </div>
+            <span class="ds-prog-val">450</span>
+          </div>
+          <div class="ds-prog-row" style="margin-top:.75rem; padding-top:.75rem; border-top:1px solid var(--border);">
+            <span class="ds-prog-label" style="color:var(--ink); font-weight:700;">Total</span>
+            <div class="ds-prog-track">
+              <div class="ds-prog-fill" style="width:100%; background:linear-gradient(90deg,#60a5fa,#3b82f6);"></div>
+            </div>
+            <span class="ds-prog-val">950</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6 offset-lg-1 reveal">
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="ds-card">
+              <div class="ds-icon" style="background:#fff1f2;">
+                <i class="bi bi-exclamation-circle" style="color:#dc2626; font-size:1.4rem;"></i>
+              </div>
+              <div>
+                <div class="ds-num" style="color:#dc2626;">500</div>
+                <div class="ds-label">Cancer Images</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="ds-card">
+              <div class="ds-icon" style="background:#f0fdf4;">
+                <i class="bi bi-check-circle" style="color:#16a34a; font-size:1.4rem;"></i>
+              </div>
+              <div>
+                <div class="ds-num" style="color:#16a34a;">450</div>
+                <div class="ds-label">Non-Cancer Images</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="ds-card">
+              <div class="ds-icon" style="background:var(--blue-pale);">
+                <i class="bi bi-images" style="color:var(--blue); font-size:1.4rem;"></i>
+              </div>
+              <div>
+                <div class="ds-num">950</div>
+                <div class="ds-label">Total Images</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="ds-card">
+              <div class="ds-icon" style="background:var(--amber-pale);">
+                <i class="bi bi-grid-3x3" style="color:var(--amber); font-size:1.4rem;"></i>
+              </div>
+              <div>
+                <div class="ds-num">224<span style="font-size:1rem;">px</span></div>
+                <div class="ds-label">Input Size</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════ HOW IT WORKS ════════════════════════ -->
+<div class="steps-section">
+  <div class="row align-items-start gy-5">
+    <div class="col-lg-5 reveal">
+      <span class="eyebrow"><span class="dot"></span> Workflow</span>
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-sub" style="color:#334e68;">From registration to a result in four simple steps — designed for clinical ease of use.</p>
+
+      <div class="mt-4">
+        <div class="step-item">
+          <div class="step-num-box">01</div>
+          <div>
+            <div class="step-title">Register an Account</div>
+            <p class="step-desc">Fill in your details and submit a registration request. An administrator will review and activate your account before you can access the system.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num-box">02</div>
+          <div>
+            <div class="step-title">Log In Securely</div>
+            <p class="step-desc">Sign in with your credentials. The system validates your login ID, password, and account activation status before granting dashboard access.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num-box">03</div>
+          <div>
+            <div class="step-title">Upload an Oral Image</div>
+            <p class="step-desc">Navigate to the Predict section and upload a clear image of the oral region. The system automatically resizes and normalises the image to 224×224 px.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num-box">04</div>
+          <div>
+            <div class="step-title">Receive AI Prediction</div>
+            <p class="step-desc">The MobileNet model returns a confidence score for each class — Cancer, Non-Cancer, or Invalid — within seconds, along with a final classification result.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6 offset-lg-1 reveal">
+      <div class="result-demo">
+        <div class="rd-header">
+          <span class="rd-title"><i class="bi bi-cpu me-2" style="color:var(--blue);"></i>Sample Prediction Output</span>
+          <span class="rd-badge"><span class="rd-badge-dot"></span> Completed</span>
+        </div>
+
+        <p style="font-size:.75rem; font-weight:700; color:#1e3a52; text-transform:uppercase; letter-spacing:.08em; margin-bottom:.9rem;">Class Confidence Scores</p>
+
+        <div class="class-row">
+          <span class="class-name">Non-Cancer</span>
+          <div class="class-track">
+            <div class="class-fill fill-green" style="width:84%;"></div>
+          </div>
+          <span class="class-val" style="color:var(--green);">84%</span>
+        </div>
+        <div class="class-row">
+          <span class="class-name">Cancer</span>
+          <div class="class-track">
+            <div class="class-fill fill-red" style="width:12%;"></div>
+          </div>
+          <span class="class-val" style="color:var(--red);">12%</span>
+        </div>
+        <div class="class-row">
+          <span class="class-name">Invalid</span>
+          <div class="class-track">
+            <div class="class-fill fill-slate" style="width:4%;"></div>
+          </div>
+          <span class="class-val" style="color:#334e68;">4%</span>
+        </div>
+
+        <div class="result-verdict">
+          <i class="bi bi-check-circle-fill verdict-icon"></i>
+          <div>
+            <div class="verdict-text">Non-Cancer — High Confidence (84%)</div>
+            <div class="verdict-sub">No malignancy indicators detected in this image.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:1.25rem; padding:1rem; background:var(--surface2); border-radius:var(--radius-sm);">
+          <p style="font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#1e3a52; margin-bottom:.6rem;">Model Details</p>
+          <div class="d-flex flex-wrap gap-3">
+            <span style="font-size:.8rem; color:var(--text); font-weight:500;"><strong>Architecture:</strong> MobileNet V2</span>
+            <span style="font-size:.8rem; color:var(--text); font-weight:500;"><strong>Accuracy:</strong> 84.69%</span>
+            <span style="font-size:.8rem; color:var(--text); font-weight:500;"><strong>Input:</strong> 224 × 224 px</span>
+            <span style="font-size:.8rem; color:var(--text); font-weight:500;"><strong>Classes:</strong> 3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════════ RISK FACTORS ════════════════════════ -->
+<section class="risk-section" style="margin:0 calc(-50vw + 50%); padding-left:calc(50vw - 50%); padding-right:calc(50vw - 50%);">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <span class="eyebrow"><span class="dot"></span> Awareness</span>
+      <h2 class="section-title">Know the Risk Factors</h2>
+      <p class="section-sub mx-auto" style="color:#334e68;">Understanding risk factors is the first step toward prevention. Oral cancer is largely preventable with early awareness and lifestyle changes.</p>
+    </div>
+    <div class="row g-3 reveal">
+      <div class="col-md-6 col-lg-4">
+        <div class="risk-card">
+          <span class="risk-emoji">🚬</span>
+          <div>
+            <p class="risk-title">Tobacco Use</p>
+            <p class="risk-desc">Smoking and smokeless tobacco (gutka, betel quid) are leading causes of oral cancer. Cessation significantly reduces risk.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="risk-card">
+          <span class="risk-emoji">🍶</span>
+          <div>
+            <p class="risk-title">Alcohol Consumption</p>
+            <p class="risk-desc">Heavy and prolonged alcohol use increases oral cancer risk, especially when combined with tobacco use.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="risk-card">
+          <span class="risk-emoji">🦠</span>
+          <div>
+            <p class="risk-title">HPV Infection</p>
+            <p class="risk-desc">Human Papillomavirus (HPV-16) is strongly linked to oropharyngeal cancers, especially in younger adults.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="risk-card">
+          <span class="risk-emoji">☀️</span>
+          <div>
+            <p class="risk-title">Sun Exposure</p>
+            <p class="risk-desc">Chronic UV exposure to lips is a known risk for lip cancer. SPF lip balm and hats provide effective protection.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="risk-card">
+          <span class="risk-emoji">🧬</span>
+          <div>
+            <p class="risk-title">Genetic Predisposition</p>
+            <p class="risk-desc">A family history of oral or head-and-neck cancers can increase susceptibility. Genetic counselling can help assess personal risk.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="risk-card">
+          <span class="risk-emoji">🪥</span>
+          <div>
+            <p class="risk-title">Poor Oral Hygiene</p>
+            <p class="risk-desc">Chronic irritation from ill-fitting dentures or persistent poor oral hygiene can promote the development of cancerous lesions over time.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════ CTA BANNER ═════════════════════════ -->
+<div class="mt-5 reveal">
+  <div class="cta-banner">
+    <h2 class="cta-title">Ready to Run a Screening?</h2>
+    <p class="cta-sub">Create a free account to access the AI prediction tool and contribute to earlier cancer detection outcomes.</p>
+    <div class="cta-actions">
+      <a href="{% url 'register' %}" class="btn-hero-primary">
+        Create Account <i class="bi bi-arrow-right"></i>
+      </a>
+      <a href="{% url 'user_login' %}" class="btn-hero-ghost">
+        <i class="bi bi-person"></i> Already have an account?
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════════ DISCLAIMER ═════════════════════════ -->
+<div class="disclaimer-box reveal">
+  <i class="bi bi-exclamation-triangle-fill disclaimer-icon"></i>
+  <div>
+    <div class="disclaimer-title">Medical Disclaimer</div>
+    <p class="disclaimer-text">
+      This system is an <strong>AI-assisted decision-support tool</strong> and does not replace professional medical diagnosis. All results must be reviewed by a qualified healthcare provider. Do not make treatment or diagnostic decisions based solely on AI output.
+    </p>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+{% endblock %}
